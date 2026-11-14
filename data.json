@@ -61,6 +61,21 @@
       "createdAt": "2026-11-14T04:27:16.672Z"
     }
   ],
-  "packages": [],
+  "packages": [
+    {
+      "id": "mwgpx56lr5nz3w",
+      "hours": 60,
+      "price": 9000,
+      "totalVisible": true,
+      "unitVisible": true,
+      "startDate": "2026-11-13",
+      "endDate": null,
+      "notes": "",
+      "paid": true,
+      "paidDate": "2026-11-14",
+      "addedBy": "Efraim",
+      "createdAt": "2026-11-14T18:07:20.445Z"
+    }
+  ],
   "adminHash": "20fd5943895feb9cf06c1a7ef33f1c7dbeb98055750a57dfffb01d5edc5d7726"
 }
