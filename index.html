@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Tracker — Control de Clases</title>
+<style>
+:root {
+  --bg: #0f0f13;
+  --bg2: #1a1a24;
+  --bg3: #24243a;
+  --accent: #6c63ff;
+  --accent2: #8b83ff;
+  --green: #34d399;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --orange: #fb923c;
+  --text: #e4e4f0;
+  --text2: #9999b0;
+  --border: #2a2a40;
+  --radius: 12px;
+}
+
+body.light {
+  --bg: #f5f5f7;
+  --bg2: #ffffff;
+  --bg3: #e8e8f0;
+  --text: #1a1a2e;
+  --text2: #6b6b80;
+  --border: #d4d4e0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; transition: background 0.3s, color 0.3s;
+}
+
+/* ─── SETUP SCREEN ─── */
+.setup-screen {
+  display: none; min-height: 100vh; align-items: center; justify-content: center;
+  padding: 24px; background: var(--bg);
+}
+
+.setup-card {
+  width: 100%; max-width: 420px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px 24px; transition: background 0.3s, border-color 0.3s;
+}
+
+.setup-card h1 { font-size: 24px; text-align: center; margin-bottom: 8px; }
+.setup-card p { color: var(--text2); text-align: center; margin-bottom: 24px; font-size: 14px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%; padding: 10px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 14px;
+  transition: border-color 0.2s, background 0.3s;
+}
+.field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+.field .hint { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  width: 100%; padding: 12px; border: none; border-radius: 10px;
+  background: var(--accent); color: #fff; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn:hover { background: var(--accent2); }
+.btn-secondary { background: var(--bg3); color: var(--text); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); }
+.btn-danger:hover { opacity: 0.8; }
+.btn-sm { font-size: 13px; padding: 8px 14px; width: auto; }
+
+/* ─── TOGGLE SWITCHES ─── */
+.toggle-row { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--border); border-radius: 20px; transition: 0.3s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; height: 16px; width: 16px;
+  left: 2px; bottom: 2px; background: var(--text);
+  border-radius: 50%; transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+/* ─── HEADER ─── */
+.header {
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header-user { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text2); }
+.header-user .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.header-toggles { display: flex; gap: 16px; margin-top: 8px; }
+.header-role { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ─── APP ─── */
+.app { display: none; }
+.app.active { display: block; }
+
+/* ─── STATS ─── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 10px;
+  text-align: center; transition: background 0.3s, border-color 0.3s;
+}
+
+.stat-card .number { font-size: 24px; font-weight: 800; }
+.stat-card .label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+.stat-card.available .number { color: var(--green); }
+.stat-card.used .number { color: var(--accent); }
+.stat-card.purchased .number { color: var(--yellow); }
+.stat-card.debt .number { color: var(--orange); }
+.stat-card.debt { border-color: var(--orange); }
+
+/* ─── TABS ─── */
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
+.tab {
+  flex: 1; padding: 12px; text-align: center; font-size: 14px;
+  font-weight: 600; color: var(--text2); background: none;
+  border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── CALENDAR ─── */
+.calendar-section { padding: 16px 20px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-header h2 { font-size: 16px; font-weight: 600; }
+.cal-nav { display: flex; gap: 4px; }
+.cal-nav button {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+
+.cal-nav button:hover { background: var(--bg3); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-weekday {
+  text-align: center; font-size: 11px; font-weight: 600;
+  color: var(--text2); padding: 8px 0; text-transform: uppercase;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 10px; cursor: pointer; transition: all 0.2s;
+  position: relative; font-size: 14px;
+  background: var(--bg2); border: 1px solid transparent;
+  min-height: 44px;
+}
+
+.cal-day:hover { border-color: var(--border); }
+.cal-day.empty { background: transparent; cursor: default; }
+.cal-day.today { border-color: var(--accent); }
+
+.cal-day .dots {
+  display: flex; gap: 3px; margin-top: 3px;
+  position: absolute; bottom: 5px;
+}
+
+.cal-day .dot-indicator { width: 5px; height: 5px; border-radius: 50%; }
+.dot-scheduled { background: var(--accent); }
+.dot-completed { background: var(--green); }
+.dot-cancelled { background: var(--red); }
+
+/* ─── PACKAGES ─── */
+.packages-section { padding: 16px 20px; display: none; }
+
+.package-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.package-card .pkg-header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px;
+}
+
+.package-card h3 { font-size: 16px; font-weight: 700; }
+.package-card .pkg-price { color: var(--yellow); font-weight: 700; font-size: 14px; text-align: right; }
+.package-card .pkg-dates { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+
+.package-card .pkg-progress {
+  height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 4px;
+}
+
+.package-card .pkg-bar {
+  height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s;
+}
+
+.package-card .pkg-info {
+  font-size: 12px; color: var(--text2); display: flex; justify-content: space-between;
+}
+
+.package-card .pkg-footer {
+  display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+
+.payment-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 6px; cursor: pointer; border: none;
+}
+.payment-badge.paid { background: rgba(52,211,153,0.15); color: var(--green); }
+.payment-badge.pending { background: rgba(251,191,36,0.15); color: var(--yellow); }
+
+/* ─── DAY PANEL ─── */
+.day-panel { display: none; padding: 16px 20px; }
+.day-panel.active { display: block; }
+
+.day-panel-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+
+.day-panel-header h3 { font-size: 16px; }
+
+.day-panel-header .close-btn {
+  background: none; border: none; color: var(--text2);
+  font-size: 20px; cursor: pointer; padding: 4px 8px;
+}
+
+.session-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.session-item .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.session-item .session-info { flex: 1; }
+.session-item .session-info .time { font-weight: 600; font-size: 14px; }
+.session-item .session-info .notes { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.session-item .session-info .meta { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+.session-actions { display: flex; gap: 6px; }
+
+.session-actions button {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text2); padding: 4px 8px; font-size: 12px; cursor: pointer;
+}
+
+.session-actions button:hover { color: var(--text); border-color: var(--text2); }
+
+/* ─── CHART ─── */
+.chart-section { padding: 16px 20px; display: none; }
+.chart-container {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  transition: background 0.3s, border-color 0.3s;
+}
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding-top: 8px; }
+.chart-bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.chart-bar {
+  width: 100%; max-width: 32px; background: var(--accent);
+  border-radius: 4px 4px 0 0; transition: height 0.4s ease;
+  min-height: 2px; position: relative;
+}
+.chart-bar:hover { opacity: 0.8; }
+.chart-bar-value { font-size: 10px; color: var(--text2); font-weight: 600; }
+.chart-bar-label { font-size: 10px; color: var(--text2); text-align: center; margin-top: 4px; }
+.chart-empty { text-align: center; padding: 30px; color: var(--text2); font-size: 13px; }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 100;
+  align-items: flex-end; justify-content: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--bg2); border-radius: 16px 16px 0 0;
+  width: 100%; max-width: 500px; max-height: 85vh;
+  overflow-y: auto; padding: 24px;
+  animation: slideUp 0.25s ease;
+  transition: background 0.3s;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (min-width: 600px) {
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: 16px; max-height: 80vh; }
+}
+
+.modal h2 { font-size: 18px; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions .btn { flex: 1; }
+
+/* ─── FAB ─── */
+.fab {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 28px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 40; transition: transform 0.2s;
+}
+
+.fab:hover { transform: scale(1.05); }
+
+/* ─── SETTINGS ─── */
+.settings-section { padding: 16px 20px; display: none; }
+
+.settings-group {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.settings-group h3 {
+  font-size: 14px; color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 12px;
+}
+
+.settings-group .info-row {
+  display: flex; justify-content: space-between; padding: 8px 0;
+  font-size: 14px; border-bottom: 1px solid var(--border);
+}
+
+.settings-group .info-row:last-child { border-bottom: none; }
+
+.settings-group .info-row .val {
+  color: var(--text2); font-family: monospace; font-size: 13px;
+}
+
+/* ─── ADMIN ─── */
+.admin-section { padding: 16px 20px; display: none; }
+.admin-lock-btn {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); padding: 8px 14px;
+  font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+}
+.admin-lock-btn:hover { border-color: var(--accent); color: var(--text); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 24px; border-radius: 10px;
+  font-size: 14px; z-index: 200; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none;
+}
+
+.toast.show { opacity: 1; }
+
+/* ─── LOADING / EMPTY ─── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--text2); gap: 10px;
+}
+
+.spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; line-height: 1.5; }
+
+/* ─── ADMIN-ONLY ELEMENTS ─── */
+.admin-only { display: none; }
+body.is-admin .admin-only { display: initial; }
+body.is-admin button.admin-only { display: inline-flex; }
+body.is-admin div.admin-only { display: block; }
+body.is-admin span.admin-only { display: inline; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 400px) {
+  .stats { gap: 6px; grid-template-columns: repeat(2, 1fr); }
+  .stat-card { padding: 10px 6px; }
+  .stat-card .number { font-size: 20px; }
+  .stat-card .label { font-size: 9px; }
+  .cal-day { font-size: 12px; }
+  .header { padding: 10px 16px; }
+  .header-toggles { gap: 10px; }
+  .calendar-section, .packages-section, .settings-section, .day-panel, .chart-section, .admin-section { padding: 12px 16px; }
+}
+
+@media (min-width: 768px) {
+  .stats, .calendar-section, .packages-section, .settings-section, .day-panel, .chart-section, .admin-section {
+    max-width: 600px; margin-left: auto; margin-right: auto;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══════ SETUP SCREEN ══════ -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <h1>📚 Class Tracker</h1>
+    <p id="setupDesc">Configura la conexión a GitHub para sincronizar tus datos entre dispositivos. Solo necesitas hacer esto una vez.</p>
+
+    <!-- Setup toggles -->
+    <div style="display:flex;gap:16px;margin-bottom:20px">
+      <label class="toggle-row">
+        <span>🌙</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setupThemeToggle" onchange="toggleTheme()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span>☀️</span>
+      </label>
+      <label class="toggle-row">
+        <span>ES</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setupLangToggle" onchange="toggleLang()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span>EN</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label data-i18n="lbl_name">Tu nombre</label>
+      <input type="text" id="setupName" data-i18n-placeholder="ph_name">
+    </div>
+
+    <div class="field">
+      <label data-i18n="lbl_repo">Repositorio GitHub</label>
+      <input type="text" id="setupRepo" placeholder="usuario/nombre-repo">
+      <div class="hint" data-i18n="hint_repo">Ej: mi-usuario/class-tracker</div>
+    </div>
+
+    <div class="field">
+      <label data-i18n="lbl_token">Código de acceso (Token)</label>
+      <input type="password" id="setupToken" placeholder="github_pat_...">
+      <div class="hint" data-i18n="hint_token">Token que te compartieron por WhatsApp</div>
+    </div>
+
+    <button class="btn" onclick="saveSetup()" style="margin-top:8px" data-i18n="btn_connect">Conectar →</button>
+    <div id="setupError" style="color:var(--red);font-size:13px;margin-top:12px;display:none"></div>
+  </div>
+</div>
+
+<!-- ══════ ADMIN LOGIN MODAL ══════ -->
+<div class="modal-overlay" id="adminLoginModal">
+  <div class="modal">
+    <h2 data-i18n="admin_login_title">Acceso Admin</h2>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px" data-i18n="admin_login_desc">Ingresa la contraseña de administrador para acceder a las funciones de edición.</p>
+    <div class="field">
+      <label data-i18n="lbl_admin_password">Contraseña</label>
+      <input type="password" id="adminLoginPassword" onkeydown="if(event.key==='Enter')verifyAdminLogin()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('adminLoginModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="verifyAdminLogin()" data-i18n="btn_enter">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ ADMIN SETUP MODAL (first time) ══════ -->
+<div class="modal-overlay" id="adminSetupModal">
+  <div class="modal">
+    <h2 data-i18n="admin_setup_title">Crear contraseña Admin</h2>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px" data-i18n="admin_setup_desc">Crea una contraseña para proteger las funciones de administrador (agregar clases, paquetes, editar datos).</p>
+    <div class="field">
+      <label data-i18n="lbl_new_password">Nueva contraseña</label>
+      <input type="password" id="adminSetupPassword">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_confirm_password">Confirmar contraseña</label>
+      <input type="password" id="adminSetupConfirm" onkeydown="if(event.key==='Enter')setupAdminPassword()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('adminSetupModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="setupAdminPassword()" data-i18n="btn_create">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MAIN APP ══════ -->
+<div class="app" id="mainApp">
+
+  <div class="header">
+    <div class="header-top">
+      <h1>📚 Class Tracker</h1>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="header-user">
+          <span class="dot"></span>
+          <span id="headerUser">—</span>
+        </div>
+        <button class="admin-lock-btn" id="adminToggleBtn" onclick="handleAdminToggle()">
+          🔒 <span data-i18n="btn_admin">Admin</span>
+        </button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <div class="header-toggles">
+        <label class="toggle-row">
+          <span>🌙</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span>☀️</span>
+        </label>
+        <label class="toggle-row">
+          <span>ES</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="langToggle" onchange="toggleLang()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span>EN</span>
+        </label>
+      </div>
+      <span class="header-role" id="roleLabel"></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card available">
+      <div class="number" id="statAvailable">0</div>
+      <div class="label" data-i18n="stat_available">Disponibles</div>
+    </div>
+    <div class="stat-card used">
+      <div class="number" id="statUsed">0</div>
+      <div class="label" data-i18n="stat_used">Usadas</div>
+    </div>
+    <div class="stat-card purchased">
+      <div class="number" id="statPurchased">0</div>
+      <div class="label" data-i18n="stat_purchased">Compradas</div>
+    </div>
+    <div class="stat-card debt" id="debtCard" style="display:none">
+      <div class="number" id="statDebt">$0</div>
+      <div class="label" data-i18n="stat_debt">Deuda</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="calendar" data-i18n="tab_calendar">Calendario</button>
+    <button class="tab" data-tab="packages" data-i18n="tab_packages">Paquetes</button>
+    <button class="tab" data-tab="chart" data-i18n="tab_chart">Gráfica</button>
+    <button class="tab" data-tab="settings" data-i18n="tab_settings">Config</button>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="calendar-section" id="calendarTab">
+    <div class="cal-header">
+      <button class="btn btn-sm btn-secondary" onclick="goToday()" data-i18n="btn_today">Hoy</button>
+      <h2 id="calMonthLabel">—</h2>
+      <div class="cal-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- DAY DETAIL -->
+  <div class="day-panel" id="dayPanel">
+    <div class="day-panel-header">
+      <h3 id="dayPanelTitle">—</h3>
+      <button class="close-btn" onclick="closeDayPanel()">✕</button>
+    </div>
+    <div id="daySessionsList"></div>
+    <button class="btn btn-sm admin-only" onclick="openAddSession()" style="margin-top:12px" data-i18n="btn_add_class">+ Agregar clase</button>
+  </div>
+
+  <!-- PACKAGES TAB -->
+  <div class="packages-section" id="packagesTab">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:700" data-i18n="pkg_title">Paquetes de Horas</h2>
+      <button class="btn btn-sm admin-only" onclick="openAddPackage()" data-i18n="btn_new">+ Nuevo</button>
+    </div>
+    <div id="packagesList"></div>
+  </div>
+
+  <!-- CHART TAB -->
+  <div class="chart-section" id="chartTab">
+    <div class="chart-container">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px" data-i18n="chart_title">Horas por Mes</h3>
+      <div id="chartContent"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="settings-section" id="settingsTab">
+    <div class="settings-group">
+      <h3 data-i18n="set_connection">Conexión</h3>
+      <div class="info-row"><span data-i18n="set_repo">Repositorio</span><span class="val" id="settingsRepo">—</span></div>
+      <div class="info-row"><span data-i18n="set_user">Usuario</span><span class="val" id="settingsUser">—</span></div>
+      <div class="info-row"><span>Token</span><span class="val">•••••</span></div>
+    </div>
+    <div class="settings-group">
+      <h3 data-i18n="set_data">Datos</h3>
+      <div class="info-row"><span data-i18n="set_last_sync">Última sincronización</span><span class="val" id="settingsSync">—</span></div>
+      <div class="info-row"><span data-i18n="set_sessions_count">Sesiones registradas</span><span class="val" id="settingsSessions">0</span></div>
+    </div>
+    <button class="btn btn-secondary" onclick="syncData()" style="margin-bottom:12px" data-i18n="btn_sync">↻ Sincronizar ahora</button>
+    <button class="btn btn-secondary" onclick="exportData()" data-i18n="btn_export">↓ Exportar datos (JSON)</button>
+
+    <!-- Admin-only settings -->
+    <div class="admin-only" style="margin-top:16px">
+      <div class="settings-group">
+        <h3 data-i18n="set_admin">Administración</h3>
+        <button class="btn btn-secondary btn-sm" onclick="openAdminSetupModal()" style="margin-bottom:8px" data-i18n="btn_change_password">Cambiar contraseña admin</button>
+        <button class="btn btn-danger btn-sm" onclick="resetApp()" data-i18n="btn_disconnect">Desconectar</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab admin-only" id="fab" onclick="openAddSession()">+</button>
+</div>
+
+<!-- ══════ ADD SESSION MODAL ══════ -->
+<div class="modal-overlay" id="sessionModal">
+  <div class="modal">
+    <h2 data-i18n="modal_add_class">Agregar Clase</h2>
+    <div class="field">
+      <label data-i18n="lbl_date">Fecha</label>
+      <input type="date" id="sessionDate">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_hours">Horas</label>
+      <input type="number" id="sessionHours" value="1" min="0.5" max="4" step="0.5">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_status">Estado</label>
+      <select id="sessionStatus"></select>
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_notes">Notas (opcional)</label>
+      <input type="text" id="sessionNotes" data-i18n-placeholder="ph_notes">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('sessionModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="saveSession()" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ ADD PACKAGE MODAL ══════ -->
+<div class="modal-overlay" id="packageModal">
+  <div class="modal">
+    <h2 data-i18n="modal_new_pkg">Nuevo Paquete</h2>
+    <div class="field">
+      <label data-i18n="lbl_hours_included">Horas incluidas</label>
+      <input type="number" id="pkgHours" value="20" min="1" max="200">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_total_price">Precio total (MXN)</label>
+      <input type="number" id="pkgPrice" placeholder="Ej: 3000">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_start_date">Fecha inicio</label>
+      <input type="date" id="pkgStart">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_end_date">Fecha fin</label>
+      <input type="date" id="pkgEnd">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_notes">Notas (opcional)</label>
+      <input type="text" id="pkgNotes" data-i18n-placeholder="ph_pkg_notes">
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="pkgPaid" onchange="document.getElementById('pkgPaidDateField').style.display=this.checked?'block':'none'">
+        <span data-i18n="lbl_paid">Pagado</span>
+      </label>
+    </div>
+    <div class="field" id="pkgPaidDateField" style="display:none">
+      <label data-i18n="lbl_paid_date">Fecha de pago</label>
+      <input type="date" id="pkgPaidDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('packageModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="savePackage()" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ EDIT SESSION MODAL ══════ -->
+<div class="modal-overlay" id="editSessionModal">
+  <div class="modal">
+    <h2 data-i18n="modal_edit_class">Editar Clase</h2>
+    <input type="hidden" id="editSessionId">
+    <div class="field">
+      <label data-i18n="lbl_date">Fecha</label>
+      <input type="date" id="editSessionDate">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_hours">Horas</label>
+      <input type="number" id="editSessionHours" value="1" min="0.5" max="4" step="0.5">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_status">Estado</label>
+      <select id="editSessionStatus"></select>
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_notes">Notas (opcional)</label>
+      <input type="text" id="editSessionNotes">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="deleteSession()" style="flex:0">🗑</button>
+      <button class="btn btn-secondary" onclick="closeModal('editSessionModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="updateSession()" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ EDIT PACKAGE MODAL ══════ -->
+<div class="modal-overlay" id="editPackageModal">
+  <div class="modal">
+    <h2 data-i18n="modal_edit_pkg">Editar Paquete</h2>
+    <input type="hidden" id="editPkgId">
+    <div class="field">
+      <label data-i18n="lbl_hours_included">Horas incluidas</label>
+      <input type="number" id="editPkgHours" min="1" max="200">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_total_price">Precio total (MXN)</label>
+      <input type="number" id="editPkgPrice">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_start_date">Fecha inicio</label>
+      <input type="date" id="editPkgStart">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_end_date">Fecha fin</label>
+      <input type="date" id="editPkgEnd">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_notes">Notas (opcional)</label>
+      <input type="text" id="editPkgNotes">
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="editPkgPaid" onchange="document.getElementById('editPkgPaidDateField').style.display=this.checked?'block':'none'">
+        <span data-i18n="lbl_paid">Pagado</span>
+      </label>
+    </div>
+    <div class="field" id="editPkgPaidDateField" style="display:none">
+      <label data-i18n="lbl_paid_date">Fecha de pago</label>
+      <input type="date" id="editPkgPaidDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="deletePackage()" style="flex:0">🗑</button>
+      <button class="btn btn-secondary" onclick="closeModal('editPackageModal')" data-i18n="btn_cancel">Cancelar</button>
+      <button class="btn" onclick="updatePackage()" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+//  I18N — TRANSLATIONS
+// ═══════════════════════════════════
+const T = {
+  es: {
+    // Setup
+    setupDesc: 'Configura la conexión a GitHub para sincronizar tus datos entre dispositivos. Solo necesitas hacer esto una vez.',
+    lbl_name: 'Tu nombre', ph_name: 'Ej: Efraim',
+    lbl_repo: 'Repositorio GitHub', hint_repo: 'Ej: mi-usuario/class-tracker',
+    lbl_token: 'Código de acceso (Token)', hint_token: 'Token que te compartieron por WhatsApp',
+    btn_connect: 'Conectar →',
+    // Stats
+    stat_available: 'Disponibles', stat_used: 'Usadas', stat_purchased: 'Compradas', stat_debt: 'Deuda',
+    // Tabs
+    tab_calendar: 'Calendario', tab_packages: 'Paquetes', tab_chart: 'Gráfica', tab_settings: 'Config',
+    // Calendar
+    btn_today: 'Hoy',
+    months: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    months_short: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+    days: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+    // Day panel
+    btn_add_class: '+ Agregar clase',
+    // Packages
+    pkg_title: 'Paquetes de Horas', btn_new: '+ Nuevo',
+    pkg_hours: 'horas', pkg_used_of: 'de', pkg_used: 'usadas', pkg_remaining: 'restantes',
+    pkg_by: 'Por', pkg_edit: '✎ Editar',
+    pkg_paid: '✓ Pagado', pkg_pending: '⏳ Pendiente',
+    // Chart
+    chart_title: 'Horas por Mes', chart_hours: 'hrs', chart_empty: 'Aún no hay datos para mostrar.',
+    // Settings
+    set_connection: 'Conexión', set_repo: 'Repositorio', set_user: 'Usuario',
+    set_data: 'Datos', set_last_sync: 'Última sincronización', set_sessions_count: 'Sesiones registradas',
+    set_admin: 'Administración',
+    btn_sync: '↻ Sincronizar ahora', btn_export: '↓ Exportar datos (JSON)', btn_disconnect: 'Desconectar',
+    btn_change_password: 'Cambiar contraseña admin',
+    btn_admin: 'Admin',
+    // Admin
+    admin_login_title: 'Acceso Admin', admin_login_desc: 'Ingresa la contraseña de administrador para acceder a las funciones de edición.',
+    admin_setup_title: 'Crear contraseña Admin', admin_setup_desc: 'Crea una contraseña para proteger las funciones de administrador (agregar clases, paquetes, editar datos).',
+    lbl_admin_password: 'Contraseña', lbl_new_password: 'Nueva contraseña', lbl_confirm_password: 'Confirmar contraseña',
+    btn_enter: 'Entrar', btn_create: 'Crear',
+    toast_password_mismatch: 'Las contraseñas no coinciden',
+    toast_password_short: 'Mínimo 4 caracteres',
+    toast_password_set: '✓ Contraseña admin creada',
+    toast_password_changed: '✓ Contraseña cambiada',
+    toast_wrong_password: 'Contraseña incorrecta',
+    toast_admin_on: '🔓 Modo admin activado',
+    toast_admin_off: '🔒 Modo admin desactivado',
+    role_admin: 'ADMIN', role_viewer: 'SOLO LECTURA',
+    // Modals
+    modal_add_class: 'Agregar Clase', modal_edit_class: 'Editar Clase',
+    modal_new_pkg: 'Nuevo Paquete', modal_edit_pkg: 'Editar Paquete',
+    lbl_date: 'Fecha', lbl_hours: 'Horas', lbl_status: 'Estado',
+    lbl_notes: 'Notas (opcional)', ph_notes: 'Tema de la clase, etc.',
+    lbl_hours_included: 'Horas incluidas', lbl_total_price: 'Precio total (MXN)',
+    lbl_start_date: 'Fecha inicio', lbl_end_date: 'Fecha fin',
+    lbl_paid: 'Pagado', lbl_paid_date: 'Fecha de pago',
+    ph_pkg_notes: 'Ej: Pago adelantado 6 meses',
+    btn_cancel: 'Cancelar', btn_save: 'Guardar',
+    // Status options
+    status_scheduled: '📅 Programada', status_completed: '✅ Completada', status_cancelled: '❌ Cancelada',
+    status_label_scheduled: 'Programada', status_label_completed: 'Completada', status_label_cancelled: 'Cancelada',
+    // Misc
+    empty_no_classes: 'No hay clases este día',
+    empty_no_packages: 'No hay paquetes.<br>Agrega uno para comenzar.',
+    confirm_delete_class: '¿Eliminar esta clase?',
+    confirm_delete_pkg: '¿Eliminar este paquete?',
+    confirm_disconnect: '¿Desconectar? Los datos en GitHub se mantienen.',
+    toast_saved: '✓ Guardado',
+    toast_exported: 'Datos exportados',
+    toast_fields_required: 'Todos los campos son requeridos',
+    toast_repo_format: 'El repo debe ser: usuario/nombre-repo',
+    toast_date_hours_required: 'Fecha y horas son requeridos',
+    toast_pkg_required: 'Horas, inicio y fin son requeridos',
+    connecting: 'Conectando…',
+    error_prefix: 'Error: ',
+    sync_error: 'Error al sincronizar: ',
+    conflict_msg: 'Conflicto. Datos actualizados, intenta de nuevo.',
+    update_msg: 'Update',
+  },
+  en: {
+    setupDesc: 'Set up the GitHub connection to sync your data across devices. You only need to do this once.',
+    lbl_name: 'Your name', ph_name: 'e.g. Efraim',
+    lbl_repo: 'GitHub Repository', hint_repo: 'e.g. my-user/class-tracker',
+    lbl_token: 'Access code (Token)', hint_token: 'Token shared via WhatsApp',
+    btn_connect: 'Connect →',
+    stat_available: 'Available', stat_used: 'Used', stat_purchased: 'Purchased', stat_debt: 'Debt',
+    tab_calendar: 'Calendar', tab_packages: 'Packages', tab_chart: 'Chart', tab_settings: 'Settings',
+    btn_today: 'Today',
+    months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    months_short: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    btn_add_class: '+ Add class',
+    pkg_title: 'Hour Packages', btn_new: '+ New',
+    pkg_hours: 'hours', pkg_used_of: 'of', pkg_used: 'used', pkg_remaining: 'remaining',
+    pkg_by: 'By', pkg_edit: '✎ Edit',
+    pkg_paid: '✓ Paid', pkg_pending: '⏳ Pending',
+    chart_title: 'Hours per Month', chart_hours: 'hrs', chart_empty: 'No data to show yet.',
+    set_connection: 'Connection', set_repo: 'Repository', set_user: 'User',
+    set_data: 'Data', set_last_sync: 'Last sync', set_sessions_count: 'Registered sessions',
+    set_admin: 'Administration',
+    btn_sync: '↻ Sync now', btn_export: '↓ Export data (JSON)', btn_disconnect: 'Disconnect',
+    btn_change_password: 'Change admin password',
+    btn_admin: 'Admin',
+    admin_login_title: 'Admin Access', admin_login_desc: 'Enter the admin password to access editing features.',
+    admin_setup_title: 'Create Admin Password', admin_setup_desc: 'Create a password to protect admin features (add classes, packages, edit data).',
+    lbl_admin_password: 'Password', lbl_new_password: 'New password', lbl_confirm_password: 'Confirm password',
+    btn_enter: 'Enter', btn_create: 'Create',
+    toast_password_mismatch: 'Passwords do not match',
+    toast_password_short: 'Minimum 4 characters',
+    toast_password_set: '✓ Admin password created',
+    toast_password_changed: '✓ Password changed',
+    toast_wrong_password: 'Wrong password',
+    toast_admin_on: '🔓 Admin mode enabled',
+    toast_admin_off: '🔒 Admin mode disabled',
+    role_admin: 'ADMIN', role_viewer: 'VIEW ONLY',
+    modal_add_class: 'Add Class', modal_edit_class: 'Edit Class',
+    modal_new_pkg: 'New Package', modal_edit_pkg: 'Edit Package',
+    lbl_date: 'Date', lbl_hours: 'Hours', lbl_status: 'Status',
+    lbl_notes: 'Notes (optional)', ph_notes: 'Class topic, etc.',
+    lbl_hours_included: 'Hours included', lbl_total_price: 'Total price (MXN)',
+    lbl_start_date: 'Start date', lbl_end_date: 'End date',
+    lbl_paid: 'Paid', lbl_paid_date: 'Payment date',
+    ph_pkg_notes: 'e.g. 6 months advance payment',
+    btn_cancel: 'Cancel', btn_save: 'Save',
+    status_scheduled: '📅 Scheduled', status_completed: '✅ Completed', status_cancelled: '❌ Cancelled',
+    status_label_scheduled: 'Scheduled', status_label_completed: 'Completed', status_label_cancelled: 'Cancelled',
+    empty_no_classes: 'No classes this day',
+    empty_no_packages: 'No packages yet.<br>Add one to get started.',
+    confirm_delete_class: 'Delete this class?',
+    confirm_delete_pkg: 'Delete this package?',
+    confirm_disconnect: 'Disconnect? Data on GitHub is kept.',
+    toast_saved: '✓ Saved',
+    toast_exported: 'Data exported',
+    toast_fields_required: 'All fields are required',
+    toast_repo_format: 'Repo must be: user/repo-name',
+    toast_date_hours_required: 'Date and hours are required',
+    toast_pkg_required: 'Hours, start and end dates are required',
+    connecting: 'Connecting…',
+    error_prefix: 'Error: ',
+    sync_error: 'Sync error: ',
+    conflict_msg: 'Conflict. Data refreshed, try again.',
+    update_msg: 'Update',
+  }
+};
+
+let lang = 'es';
+
+function t(key) { return T[lang][key] || T['es'][key] || key; }
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (T[lang][key]) el.textContent = T[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (T[lang][key]) el.placeholder = T[lang][key];
+  });
+  const desc = document.getElementById('setupDesc');
+  if (desc) desc.textContent = t('setupDesc');
+  populateStatusSelects();
+  updateRoleLabel();
+  if (document.getElementById('mainApp').classList.contains('active')) {
+    renderCalendar();
+    renderPackages();
+    renderChart();
+    if (selectedDate) renderDayPanel(selectedDate);
+  }
+}
+
+function populateStatusSelects() {
+  const html = `
+    <option value="scheduled">${t('status_scheduled')}</option>
+    <option value="completed">${t('status_completed')}</option>
+    <option value="cancelled">${t('status_cancelled')}</option>`;
+  ['sessionStatus','editSessionStatus'].forEach(id => {
+    const sel = document.getElementById(id);
+    const val = sel.value;
+    sel.innerHTML = html;
+    if (val) sel.value = val;
+  });
+}
+
+function toggleLang() {
+  lang = lang === 'es' ? 'en' : 'es';
+  localStorage.setItem('classTracker_lang', lang);
+  document.getElementById('langToggle').checked = lang === 'en';
+  document.getElementById('setupLangToggle').checked = lang === 'en';
+  applyLang();
+}
+
+// ═══════════════════════════════════
+//  THEME
+// ═══════════════════════════════════
+let lightMode = false;
+
+function toggleTheme() {
+  lightMode = !lightMode;
+  document.body.classList.toggle('light', lightMode);
+  localStorage.setItem('classTracker_theme', lightMode ? 'light' : 'dark');
+  document.getElementById('themeToggle').checked = lightMode;
+  document.getElementById('setupThemeToggle').checked = lightMode;
+}
+
+// ═══════════════════════════════════
+//  CONFIG & STATE
+// ═══════════════════════════════════
+let config = null;
+let appData = { sessions: [], packages: [] };
+let dataSha = null;
+let isAdmin = false;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let selectedDate = null;
+
+// ═══════════════════════════════════
+//  ADMIN — SHA-256 + ROLE MGMT
+// ═══════════════════════════════════
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getAdminHash() { return localStorage.getItem('classTracker_adminHash'); }
+function setAdminHash(hash) { localStorage.setItem('classTracker_adminHash', hash); }
+
+function setAdminMode(on) {
+  isAdmin = on;
+  document.body.classList.toggle('is-admin', on);
+  const btn = document.getElementById('adminToggleBtn');
+  btn.innerHTML = on ? '🔓 <span data-i18n="btn_admin">Admin</span>' : '🔒 <span data-i18n="btn_admin">Admin</span>';
+  // Re-apply i18n for the span inside
+  const span = btn.querySelector('[data-i18n]');
+  if (span && T[lang][span.getAttribute('data-i18n')]) span.textContent = T[lang][span.getAttribute('data-i18n')];
+  updateRoleLabel();
+  // Re-render to show/hide edit buttons in packages
+  renderPackages();
+  if (selectedDate) renderDayPanel(selectedDate);
+}
+
+function updateRoleLabel() {
+  const el = document.getElementById('roleLabel');
+  if (!el) return;
+  el.textContent = isAdmin ? t('role_admin') : t('role_viewer');
+  el.style.color = isAdmin ? 'var(--green)' : 'var(--text2)';
+}
+
+function handleAdminToggle() {
+  if (isAdmin) {
+    // Lock admin
+    setAdminMode(false);
+    showToast(t('toast_admin_off'));
+    return;
+  }
+  const hash = getAdminHash();
+  if (!hash) {
+    // No password set — open setup modal
+    openModal('adminSetupModal');
+  } else {
+    // Password exists — open login modal
+    document.getElementById('adminLoginPassword').value = '';
+    openModal('adminLoginModal');
+  }
+}
+
+async function setupAdminPassword() {
+  const pw = document.getElementById('adminSetupPassword').value;
+  const confirm = document.getElementById('adminSetupConfirm').value;
+  if (pw.length < 4) { showToast(t('toast_password_short')); return; }
+  if (pw !== confirm) { showToast(t('toast_password_mismatch')); return; }
+  const hash = await sha256(pw);
+  setAdminHash(hash);
+  closeModal('adminSetupModal');
+  setAdminMode(true);
+  showToast(t('toast_password_set'));
+}
+
+function openAdminSetupModal() {
+  document.getElementById('adminSetupPassword').value = '';
+  document.getElementById('adminSetupConfirm').value = '';
+  openModal('adminSetupModal');
+}
+
+async function verifyAdminLogin() {
+  const pw = document.getElementById('adminLoginPassword').value;
+  const hash = await sha256(pw);
+  if (hash === getAdminHash()) {
+    closeModal('adminLoginModal');
+    setAdminMode(true);
+    showToast(t('toast_admin_on'));
+  } else {
+    showToast(t('toast_wrong_password'));
+  }
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+function init() {
+  // Restore theme
+  const savedTheme = localStorage.getItem('classTracker_theme');
+  if (savedTheme === 'light') {
+    lightMode = true;
+    document.body.classList.add('light');
+    document.getElementById('themeToggle').checked = true;
+    document.getElementById('setupThemeToggle').checked = true;
+  }
+  // Restore lang
+  const savedLang = localStorage.getItem('classTracker_lang');
+  if (savedLang === 'en') {
+    lang = 'en';
+    document.getElementById('langToggle').checked = true;
+    document.getElementById('setupLangToggle').checked = true;
+  }
+  applyLang();
+
+  const saved = localStorage.getItem('classTracker_config');
+  if (saved) {
+    config = JSON.parse(saved);
+    showApp();
+  } else {
+    document.getElementById('setupScreen').style.display = 'flex';
+  }
+}
+
+function todayStr() { const d = new Date(); return fmtDateISO(d); }
+function fmtDateISO(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+// ═══════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════
+async function saveSetup() {
+  const name = document.getElementById('setupName').value.trim();
+  const repo = document.getElementById('setupRepo').value.trim();
+  const token = document.getElementById('setupToken').value.trim();
+  const errEl = document.getElementById('setupError');
+
+  if (!name || !repo || !token) {
+    errEl.textContent = t('toast_fields_required');
+    errEl.style.display = 'block';
+    errEl.style.color = 'var(--red)';
+    return;
+  }
+  if (!repo.includes('/')) {
+    errEl.textContent = t('toast_repo_format');
+    errEl.style.display = 'block';
+    errEl.style.color = 'var(--red)';
+    return;
+  }
+
+  errEl.textContent = t('connecting');
+  errEl.style.color = 'var(--text2)';
+  errEl.style.display = 'block';
+
+  try {
+    const res = await ghGet(repo, token);
+    if (res === null) {
+      await ghWrite(repo, token, { sessions: [], packages: [] }, null);
+    }
+  } catch (e) {
+    errEl.textContent = t('error_prefix') + e.message;
+    errEl.style.color = 'var(--red)';
+    return;
+  }
+
+  config = { name, repo, token };
+  localStorage.setItem('classTracker_config', JSON.stringify(config));
+  showApp();
+}
+
+// ═══════════════════════════════════
+//  SHOW APP
+// ═══════════════════════════════════
+async function showApp() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainApp').classList.add('active');
+  document.getElementById('headerUser').textContent = config.name;
+  document.getElementById('settingsRepo').textContent = config.repo;
+  document.getElementById('settingsUser').textContent = config.name;
+
+  // Start in viewer mode
+  setAdminMode(false);
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
+  await syncData();
+}
+
+// ═══════════════════════════════════
+//  GITHUB API
+// ═══════════════════════════════════
+async function ghGet(repo, token) {
+  const r = repo || config.repo;
+  const tk = token || config.token;
+  const url = `https://api.github.com/repos/${r}/contents/data.json`;
+  const res = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${tk}`, 'Accept': 'application/vnd.github+json' }
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  dataSha = json.sha;
+  return JSON.parse(atob(json.content.replace(/\n/g, '')));
+}
+
+async function ghWrite(repo, token, data, sha) {
+  const r = repo || config.repo;
+  const tk = token || config.token;
+  const url = `https://api.github.com/repos/${r}/contents/data.json`;
+  const body = {
+    message: `${t('update_msg')} — ${new Date().toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}`,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${tk}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (res.status === 409) {
+    const fresh = await ghGet();
+    if (fresh) appData = fresh;
+    throw new Error(t('conflict_msg'));
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+
+  const result = await res.json();
+  dataSha = result.content.sha;
+  return result;
+}
+
+// ═══════════════════════════════════
+//  SYNC
+// ═══════════════════════════════════
+async function syncData() {
+  try {
+    const data = await ghGet();
+    if (data) {
+      appData = data;
+      if (!appData.sessions) appData.sessions = [];
+      if (!appData.packages) appData.packages = [];
+    }
+    const locale = lang === 'es' ? 'es-MX' : 'en-US';
+    document.getElementById('settingsSync').textContent = new Date().toLocaleTimeString(locale);
+    document.getElementById('settingsSessions').textContent = appData.sessions.length;
+    updateStats(); renderCalendar(); renderPackages(); renderChart();
+    if (selectedDate) renderDayPanel(selectedDate);
+  } catch (e) {
+    showToast(t('sync_error') + e.message);
+  }
+}
+
+async function saveData() {
+  try {
+    await ghWrite(null, null, appData, dataSha);
+    const locale = lang === 'es' ? 'es-MX' : 'en-US';
+    document.getElementById('settingsSync').textContent = new Date().toLocaleTimeString(locale);
+    document.getElementById('settingsSessions').textContent = appData.sessions.length;
+    showToast(t('toast_saved'));
+  } catch (e) {
+    showToast(t('error_prefix') + e.message);
+    await syncData();
+  }
+}
+
+// ═══════════════════════════════════
+//  STATS (with debt indicator)
+// ═══════════════════════════════════
+function updateStats() {
+  const totalPurchased = appData.packages.reduce((s, p) => s + p.hours, 0);
+  const totalUsed = appData.sessions.filter(s => s.status === 'completed').reduce((s, c) => s + c.hours, 0);
+  document.getElementById('statPurchased').textContent = totalPurchased;
+  document.getElementById('statUsed').textContent = totalUsed;
+  document.getElementById('statAvailable').textContent = Math.max(0, totalPurchased - totalUsed);
+
+  // Debt calculation
+  const debtHours = Math.max(0, totalUsed - totalPurchased);
+  const debtCard = document.getElementById('debtCard');
+  if (debtHours > 0) {
+    // Get price/hr from the latest package (by createdAt)
+    const sortedPkgs = [...appData.packages].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const latestPkg = sortedPkgs[0];
+    const pricePerHour = latestPkg && latestPkg.price && latestPkg.hours ? Math.round(latestPkg.price / latestPkg.hours) : 0;
+    const debtMXN = debtHours * pricePerHour;
+    document.getElementById('statDebt').textContent = `$${debtMXN.toLocaleString()}`;
+    debtCard.style.display = '';
+    debtCard.title = `${debtHours}h × $${pricePerHour}/hr`;
+  } else {
+    debtCard.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  const months = t('months');
+  document.getElementById('calMonthLabel').textContent = `${months[currentMonth]} ${currentYear}`;
+
+  const dayNames = t('days');
+  dayNames.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-weekday';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+  const todayString = fmtDateISO(today);
+
+  for (let i = 0; i < startOffset; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    if (dateStr === todayString) el.classList.add('today');
+
+    const num = document.createElement('span');
+    num.textContent = d;
+    el.appendChild(num);
+
+    const daySessions = appData.sessions.filter(s => s.date === dateStr);
+    if (daySessions.length > 0) {
+      const dots = document.createElement('div');
+      dots.className = 'dots';
+      [...new Set(daySessions.map(s => s.status))].forEach(st => {
+        const dot = document.createElement('div');
+        dot.className = `dot-indicator dot-${st}`;
+        dots.appendChild(dot);
+      });
+      el.appendChild(dots);
+    }
+
+    el.addEventListener('click', () => openDayPanel(dateStr));
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+
+function goToday() {
+  currentMonth = new Date().getMonth();
+  currentYear = new Date().getFullYear();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════
+//  DAY PANEL
+// ═══════════════════════════════════
+function openDayPanel(dateStr) {
+  selectedDate = dateStr;
+  document.getElementById('calendarTab').querySelector('.cal-grid').style.display = 'none';
+  document.getElementById('calendarTab').querySelector('.cal-header').style.display = 'none';
+  document.getElementById('dayPanel').classList.add('active');
+
+  const d = new Date(dateStr + 'T12:00:00');
+  const locale = lang === 'es' ? 'es-MX' : 'en-US';
+  document.getElementById('dayPanelTitle').textContent =
+    d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+
+  renderDayPanel(dateStr);
+}
+
+function renderDayPanel(dateStr) {
+  const list = document.getElementById('daySessionsList');
+  const sessions = appData.sessions.filter(s => s.date === dateStr);
+
+  if (sessions.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('empty_no_classes')}</p></div>`;
+    return;
+  }
+
+  const statusColors = { scheduled: 'var(--accent)', completed: 'var(--green)', cancelled: 'var(--red)' };
+
+  list.innerHTML = sessions.map(s => `
+    <div class="session-item">
+      <div class="status-dot" style="background:${statusColors[s.status]}"></div>
+      <div class="session-info">
+        <div class="time">${s.hours}h — ${t('status_label_' + s.status)}</div>
+        ${s.notes ? `<div class="notes">${esc(s.notes)}</div>` : ''}
+        <div class="meta">${t('pkg_by')} ${esc(s.addedBy)} · ${new Date(s.createdAt).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US')}</div>
+      </div>
+      ${isAdmin ? `<div class="session-actions"><button onclick="openEditSession('${s.id}')">✎</button></div>` : ''}
+    </div>`).join('');
+}
+
+function closeDayPanel() {
+  selectedDate = null;
+  document.getElementById('dayPanel').classList.remove('active');
+  document.getElementById('calendarTab').querySelector('.cal-grid').style.display = '';
+  document.getElementById('calendarTab').querySelector('.cal-header').style.display = '';
+}
+
+// ═══════════════════════════════════
+//  TABS
+// ═══════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('calendarTab').style.display = tab === 'calendar' ? 'block' : 'none';
+  document.getElementById('packagesTab').style.display = tab === 'packages' ? 'block' : 'none';
+  document.getElementById('chartTab').style.display = tab === 'chart' ? 'block' : 'none';
+  document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
+  document.getElementById('fab').style.display = (tab === 'calendar' && isAdmin) ? 'block' : 'none';
+  if (tab !== 'calendar') closeDayPanel();
+  if (tab === 'calendar') {
+    document.getElementById('calendarTab').querySelector('.cal-grid').style.display = '';
+    document.getElementById('calendarTab').querySelector('.cal-header').style.display = '';
+  }
+  if (tab === 'chart') renderChart();
+}
+
+// ═══════════════════════════════════
+//  PACKAGES
+// ═══════════════════════════════════
+function renderPackages() {
+  const list = document.getElementById('packagesList');
+  if (appData.packages.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>${t('empty_no_packages')}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = appData.packages.map(p => {
+    const used = appData.sessions
+      .filter(s => s.status === 'completed' && s.date >= p.startDate && s.date <= p.endDate)
+      .reduce((sum, s) => sum + s.hours, 0);
+    const pct = Math.min(100, (used / p.hours) * 100);
+    const pph = p.price ? `$${Math.round(p.price / p.hours)}/hr` : '';
+    const isPaid = p.paid === true;
+    const paidLabel = isPaid ? t('pkg_paid') : t('pkg_pending');
+    const paidClass = isPaid ? 'paid' : 'pending';
+    const paidDateStr = isPaid && p.paidDate ? ` · ${fmtDate(p.paidDate)}` : '';
+
+    return `
+      <div class="package-card">
+        <div class="pkg-header">
+          <h3>${p.hours} ${t('pkg_hours')}</h3>
+          <div style="text-align:right">
+            <span class="pkg-price">${p.price ? '$' + p.price.toLocaleString() + ' MXN' : ''} ${pph ? `(${pph})` : ''}</span>
+            <div style="margin-top:4px">
+              <span class="payment-badge ${paidClass}" ${isAdmin ? `onclick="togglePayment('${p.id}')" title="Click to toggle"` : ''}>${paidLabel}${paidDateStr}</span>
+            </div>
+          </div>
+        </div>
+        <div class="pkg-dates">${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}</div>
+        <div class="pkg-progress"><div class="pkg-bar" style="width:${pct}%"></div></div>
+        <div class="pkg-info">
+          <span>${used} ${t('pkg_used_of')} ${p.hours} ${t('pkg_used')}</span>
+          <span>${Math.max(0, p.hours - used)} ${t('pkg_remaining')}</span>
+        </div>
+        ${p.notes ? `<div style="font-size:12px;color:var(--text2);margin-top:6px">${esc(p.notes)}</div>` : ''}
+        <div class="pkg-footer">
+          <span style="font-size:11px;color:var(--text2)">${t('pkg_by')} ${esc(p.addedBy)}</span>
+          ${isAdmin ? `<button class="btn btn-sm btn-secondary" onclick="openEditPackage('${p.id}')" style="padding:6px 14px;font-size:13px">${t('pkg_edit')}</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function togglePayment(id) {
+  if (!isAdmin) return;
+  const pkg = appData.packages.find(p => p.id === id);
+  if (!pkg) return;
+  pkg.paid = !pkg.paid;
+  pkg.paidDate = pkg.paid ? todayStr() : null;
+  renderPackages();
+  await saveData();
+}
+
+// ═══════════════════════════════════
+//  CHART — Hours per Month
+// ═══════════════════════════════════
+function renderChart() {
+  const container = document.getElementById('chartContent');
+  const completedSessions = appData.sessions.filter(s => s.status === 'completed');
+
+  if (completedSessions.length === 0) {
+    container.innerHTML = `<div class="chart-empty">${t('chart_empty')}</div>`;
+    return;
+  }
+
+  // Group by month
+  const monthMap = {};
+  completedSessions.forEach(s => {
+    const key = s.date.substring(0, 7); // YYYY-MM
+    monthMap[key] = (monthMap[key] || 0) + s.hours;
+  });
+
+  // Get sorted months — last 12 at most
+  const allMonths = Object.keys(monthMap).sort();
+  const months = allMonths.slice(-12);
+  const values = months.map(m => monthMap[m]);
+  const maxVal = Math.max(...values, 1);
+  const monthsShort = t('months_short');
+
+  let html = '<div class="chart-bars">';
+  months.forEach((m, i) => {
+    const val = values[i];
+    const heightPct = (val / maxVal) * 100;
+    const [y, mo] = m.split('-');
+    const label = monthsShort[parseInt(mo) - 1] + (months.length > 6 ? '' : ' ' + y.slice(2));
+    html += `
+      <div class="chart-bar-group">
+        <div class="chart-bar-value">${val}${t('chart_hours')}</div>
+        <div class="chart-bar" style="height:${Math.max(heightPct, 3)}%" title="${val} ${t('chart_hours')} — ${m}"></div>
+        <div class="chart-bar-label">${label}</div>
+      </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════
+function openAddSession() {
+  if (!isAdmin) return;
+  document.getElementById('sessionDate').value = selectedDate || new Date().toISOString().split('T')[0];
+  document.getElementById('sessionHours').value = '1';
+  document.getElementById('sessionStatus').value = 'scheduled';
+  document.getElementById('sessionNotes').value = '';
+  openModal('sessionModal');
+}
+
+function openAddPackage() {
+  if (!isAdmin) return;
+  const now = new Date();
+  document.getElementById('pkgHours').value = '20';
+  document.getElementById('pkgPrice').value = '';
+  document.getElementById('pkgStart').value = now.toISOString().split('T')[0];
+  const end = new Date(now); end.setMonth(end.getMonth() + 6);
+  document.getElementById('pkgEnd').value = end.toISOString().split('T')[0];
+  document.getElementById('pkgNotes').value = '';
+  document.getElementById('pkgPaid').checked = false;
+  document.getElementById('pkgPaidDateField').style.display = 'none';
+  document.getElementById('pkgPaidDate').value = '';
+  openModal('packageModal');
+}
+
+function openEditSession(id) {
+  if (!isAdmin) return;
+  const s = appData.sessions.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('editSessionId').value = id;
+  document.getElementById('editSessionDate').value = s.date;
+  document.getElementById('editSessionHours').value = s.hours;
+  document.getElementById('editSessionStatus').value = s.status;
+  document.getElementById('editSessionNotes').value = s.notes || '';
+  openModal('editSessionModal');
+}
+
+function openEditPackage(id) {
+  if (!isAdmin) return;
+  const p = appData.packages.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('editPkgId').value = id;
+  document.getElementById('editPkgHours').value = p.hours;
+  document.getElementById('editPkgPrice').value = p.price || '';
+  document.getElementById('editPkgStart').value = p.startDate;
+  document.getElementById('editPkgEnd').value = p.endDate;
+  document.getElementById('editPkgNotes').value = p.notes || '';
+  document.getElementById('editPkgPaid').checked = p.paid === true;
+  document.getElementById('editPkgPaidDateField').style.display = p.paid ? 'block' : 'none';
+  document.getElementById('editPkgPaidDate').value = p.paidDate || '';
+  openModal('editPackageModal');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('active'); });
+});
+
+// ═══════════════════════════════════
+//  SAVE / UPDATE / DELETE
+// ═══════════════════════════════════
+async function saveSession() {
+  const date = document.getElementById('sessionDate').value;
+  const hours = parseFloat(document.getElementById('sessionHours').value);
+  const status = document.getElementById('sessionStatus').value;
+  const notes = document.getElementById('sessionNotes').value.trim();
+  if (!date || !hours) { showToast(t('toast_date_hours_required')); return; }
+
+  appData.sessions.push({
+    id: uid(), date, hours, status, notes,
+    addedBy: config.name,
+    createdAt: new Date().toISOString()
+  });
+
+  closeModal('sessionModal');
+  updateStats(); renderCalendar(); renderChart();
+  if (selectedDate) renderDayPanel(selectedDate);
+  await saveData();
+}
+
+async function updateSession() {
+  const id = document.getElementById('editSessionId').value;
+  const idx = appData.sessions.findIndex(s => s.id === id);
+  if (idx === -1) return;
+
+  appData.sessions[idx].date = document.getElementById('editSessionDate').value;
+  appData.sessions[idx].hours = parseFloat(document.getElementById('editSessionHours').value);
+  appData.sessions[idx].status = document.getElementById('editSessionStatus').value;
+  appData.sessions[idx].notes = document.getElementById('editSessionNotes').value.trim();
+
+  closeModal('editSessionModal');
+  updateStats(); renderCalendar(); renderChart();
+  if (selectedDate) renderDayPanel(selectedDate);
+  await saveData();
+}
+
+async function deleteSession() {
+  const id = document.getElementById('editSessionId').value;
+  if (!confirm(t('confirm_delete_class'))) return;
+  appData.sessions = appData.sessions.filter(s => s.id !== id);
+  closeModal('editSessionModal');
+  updateStats(); renderCalendar(); renderChart();
+  if (selectedDate) renderDayPanel(selectedDate);
+  await saveData();
+}
+
+async function savePackage() {
+  const hours = parseInt(document.getElementById('pkgHours').value);
+  const price = parseInt(document.getElementById('pkgPrice').value) || 0;
+  const startDate = document.getElementById('pkgStart').value;
+  const endDate = document.getElementById('pkgEnd').value;
+  const notes = document.getElementById('pkgNotes').value.trim();
+  const paid = document.getElementById('pkgPaid').checked;
+  const paidDate = paid ? (document.getElementById('pkgPaidDate').value || todayStr()) : null;
+  if (!hours || !startDate || !endDate) { showToast(t('toast_pkg_required')); return; }
+
+  appData.packages.push({
+    id: uid(), hours, price, startDate, endDate, notes,
+    paid, paidDate,
+    addedBy: config.name,
+    createdAt: new Date().toISOString()
+  });
+
+  closeModal('packageModal');
+  updateStats(); renderPackages();
+  await saveData();
+}
+
+async function updatePackage() {
+  const id = document.getElementById('editPkgId').value;
+  const idx = appData.packages.findIndex(p => p.id === id);
+  if (idx === -1) return;
+
+  appData.packages[idx].hours = parseInt(document.getElementById('editPkgHours').value);
+  appData.packages[idx].price = parseInt(document.getElementById('editPkgPrice').value) || 0;
+  appData.packages[idx].startDate = document.getElementById('editPkgStart').value;
+  appData.packages[idx].endDate = document.getElementById('editPkgEnd').value;
+  appData.packages[idx].notes = document.getElementById('editPkgNotes').value.trim();
+  appData.packages[idx].paid = document.getElementById('editPkgPaid').checked;
+  appData.packages[idx].paidDate = appData.packages[idx].paid ? (document.getElementById('editPkgPaidDate').value || todayStr()) : null;
+
+  closeModal('editPackageModal');
+  updateStats(); renderPackages();
+  await saveData();
+}
+
+async function deletePackage() {
+  const id = document.getElementById('editPkgId').value;
+  if (!confirm(t('confirm_delete_pkg'))) return;
+  appData.packages = appData.packages.filter(p => p.id !== id);
+  closeModal('editPackageModal');
+  updateStats(); renderPackages();
+  await saveData();
+}
+
+// ═══════════════════════════════════
+//  SETTINGS ACTIONS
+// ═══════════════════════════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `class-tracker-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(t('toast_exported'));
+}
+
+function resetApp() {
+  if (!confirm(t('confirm_disconnect'))) return;
+  localStorage.removeItem('classTracker_config');
+  localStorage.removeItem('classTracker_adminHash');
+  location.reload();
+}
+
+// ═══════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function fmtDate(s) {
+  if (!s) return '—';
+  const locale = lang === 'es' ? 'es-MX' : 'en-US';
+  return new Date(s + 'T12:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════
+//  START
+// ═══════════════════════════════════
+init();
+</script>
+</body>
+</html>
