@@ -29,8 +29,8 @@
       "startDate": "2026-11-13",
       "endDate": "2027-01-21",
       "notes": "",
-      "paid": false,
-      "paidDate": null,
+      "paid": true,
+      "paidDate": "2026-11-13",
       "addedBy": "Efraim",
       "createdAt": "2026-11-14T02:30:01.234Z",
       "priceVisible": true
