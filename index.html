@@ -742,10 +742,14 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="pkgPrice" placeholder="Ej: 3000">
     </div>
-    <div class="field" style="padding:4px 0">
+    <div class="field" style="padding:4px 0;display:flex;flex-direction:column;gap:8px">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="pkgPriceVisible" checked>
-        <span data-i18n="lbl_price_visible" style="color:var(--text2)">Precio visible para viewer</span>
+        <input type="checkbox" id="pkgTotalVisible" checked>
+        <span data-i18n="lbl_total_visible" style="color:var(--text2)">Precio total visible para viewer</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
+        <input type="checkbox" id="pkgUnitVisible" checked>
+        <span data-i18n="lbl_unit_visible" style="color:var(--text2)">Precio por hora visible para viewer</span>
       </label>
     </div>
     <div class="field">
@@ -823,10 +827,14 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="editPkgPrice">
     </div>
-    <div class="field" style="padding:4px 0">
+    <div class="field" style="padding:4px 0;display:flex;flex-direction:column;gap:8px">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="editPkgPriceVisible">
-        <span data-i18n="lbl_price_visible" style="color:var(--text2)">Precio visible para viewer</span>
+        <input type="checkbox" id="editPkgTotalVisible">
+        <span data-i18n="lbl_total_visible" style="color:var(--text2)">Precio total visible para viewer</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
+        <input type="checkbox" id="editPkgUnitVisible">
+        <span data-i18n="lbl_unit_visible" style="color:var(--text2)">Precio por hora visible para viewer</span>
       </label>
     </div>
     <div class="field">
@@ -933,7 +941,8 @@ const T = {
     lbl_hours_included: 'Horas incluidas', lbl_total_price: 'Precio total (MXN)',
     lbl_start_date: 'Fecha inicio', lbl_end_date: 'Fecha fin',
     lbl_paid: 'Pagado', lbl_paid_date: 'Fecha de pago',
-    lbl_price_visible: 'Precio visible para viewer',
+    lbl_total_visible: 'Precio total visible para viewer',
+    lbl_unit_visible: 'Precio por hora visible para viewer',
     lbl_end_date_opt: 'Fecha fin (opcional)',
     ph_pkg_notes: 'Ej: Pago adelantado 6 meses',
     btn_cancel: 'Cancelar', btn_save: 'Guardar',
@@ -1012,7 +1021,8 @@ const T = {
     lbl_hours_included: 'Hours included', lbl_total_price: 'Total price (MXN)',
     lbl_start_date: 'Start date', lbl_end_date: 'End date',
     lbl_paid: 'Paid', lbl_paid_date: 'Payment date',
-    lbl_price_visible: 'Price visible to viewer',
+    lbl_total_visible: 'Total price visible to viewer',
+    lbl_unit_visible: 'Price per hour visible to viewer',
     lbl_end_date_opt: 'End date (optional)',
     ph_pkg_notes: 'e.g. 6 months advance payment',
     btn_cancel: 'Cancel', btn_save: 'Save',
@@ -1601,8 +1611,9 @@ function renderPackages() {
       .filter(s => s.status === 'completed' && s.date >= p.startDate && (!p.endDate || s.date <= p.endDate))
       .reduce((sum, s) => sum + s.hours, 0);
     const pct = Math.min(100, (used / p.hours) * 100);
-    const showPrice = isAdmin || p.priceVisible !== false;
-    const pph = (showPrice && p.price) ? `$${Math.round(p.price / p.hours)}/hr` : '';
+    const showTotal = isAdmin || p.totalVisible !== false;
+    const showUnit = isAdmin || p.unitVisible !== false;
+    const pph = (showUnit && p.price) ? `$${Math.round(p.price / p.hours)}/hr` : '';
     const isPaid = p.paid === true;
     const paidLabel = isPaid ? t('pkg_paid') : t('pkg_pending');
     const paidClass = isPaid ? 'paid' : 'pending';
@@ -1614,7 +1625,7 @@ function renderPackages() {
         <div class="pkg-header">
           <h3>${p.hours} ${t('pkg_hours')}</h3>
           <div style="text-align:right">
-            ${showPrice ? `<span class="pkg-price">${p.price ? '$' + p.price.toLocaleString() + ' MXN' : ''} ${pph ? `(${pph})` : ''}</span>` : ''}
+            <span class="pkg-price">${showTotal && p.price ? '$' + p.price.toLocaleString() + ' MXN' : ''} ${pph ? `(${pph})` : ''}</span>
             <div style="margin-top:4px">
               <span class="payment-badge ${paidClass}" ${isAdmin ? `onclick="togglePayment('${p.id}')" title="Click to toggle"` : ''}>${paidLabel}${paidDateStr}</span>
             </div>
@@ -1724,7 +1735,8 @@ function openAddPackage() {
   const now = new Date();
   document.getElementById('pkgHours').value = '20';
   document.getElementById('pkgPrice').value = '';
-  document.getElementById('pkgPriceVisible').checked = true;
+  document.getElementById('pkgTotalVisible').checked = true;
+  document.getElementById('pkgUnitVisible').checked = true;
   document.getElementById('pkgStart').value = now.toISOString().split('T')[0];
   document.getElementById('pkgEnd').value = '';
   document.getElementById('pkgNotes').value = '';
@@ -1754,7 +1766,8 @@ function openEditPackage(id) {
   document.getElementById('editPkgId').value = id;
   document.getElementById('editPkgHours').value = p.hours;
   document.getElementById('editPkgPrice').value = p.price || '';
-  document.getElementById('editPkgPriceVisible').checked = p.priceVisible !== false;
+  document.getElementById('editPkgTotalVisible').checked = p.totalVisible !== false;
+  document.getElementById('editPkgUnitVisible').checked = p.unitVisible !== false;
   document.getElementById('editPkgStart').value = p.startDate;
   document.getElementById('editPkgEnd').value = p.endDate || '';
   document.getElementById('editPkgNotes').value = p.notes || '';
@@ -1902,7 +1915,8 @@ async function deleteSession() {
 async function savePackage() {
   const hours = parseInt(document.getElementById('pkgHours').value);
   const price = parseInt(document.getElementById('pkgPrice').value) || 0;
-  const priceVisible = document.getElementById('pkgPriceVisible').checked;
+  const totalVisible = document.getElementById('pkgTotalVisible').checked;
+  const unitVisible = document.getElementById('pkgUnitVisible').checked;
   const startDate = document.getElementById('pkgStart').value;
   const endDate = document.getElementById('pkgEnd').value;
   const notes = document.getElementById('pkgNotes').value.trim();
@@ -1911,7 +1925,7 @@ async function savePackage() {
   if (!hours || !startDate) { showToast(t('toast_pkg_required_v2')); return; }
 
   appData.packages.push({
-    id: uid(), hours, price, priceVisible, startDate, endDate: endDate || null, notes,
+    id: uid(), hours, price, totalVisible, unitVisible, startDate, endDate: endDate || null, notes,
     paid, paidDate,
     addedBy: config.name,
     createdAt: new Date().toISOString()
@@ -1929,7 +1943,8 @@ async function updatePackage() {
 
   appData.packages[idx].hours = parseInt(document.getElementById('editPkgHours').value);
   appData.packages[idx].price = parseInt(document.getElementById('editPkgPrice').value) || 0;
-  appData.packages[idx].priceVisible = document.getElementById('editPkgPriceVisible').checked;
+  appData.packages[idx].totalVisible = document.getElementById('editPkgTotalVisible').checked;
+  appData.packages[idx].unitVisible = document.getElementById('editPkgUnitVisible').checked;
   appData.packages[idx].startDate = document.getElementById('editPkgStart').value;
   appData.packages[idx].endDate = document.getElementById('editPkgEnd').value || null;
   appData.packages[idx].notes = document.getElementById('editPkgNotes').value.trim();
