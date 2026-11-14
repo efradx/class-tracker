@@ -231,6 +231,14 @@ body {
 .payment-badge.paid { background: rgba(52,211,153,0.15); color: var(--green); }
 .payment-badge.pending { background: rgba(251,191,36,0.15); color: var(--yellow); }
 
+/* Day picker buttons for recurrence */
+.day-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border);
+  background: transparent; color: var(--text); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.day-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* ─── DAY PANEL ─── */
 .day-panel { display: none; padding: 16px 20px; }
 .day-panel.active { display: block; }
@@ -653,6 +661,10 @@ body.is-admin span.admin-only { display: inline; }
       <input type="date" id="sessionDate">
     </div>
     <div class="field">
+      <label data-i18n="lbl_time">Hora</label>
+      <input type="time" id="sessionTime">
+    </div>
+    <div class="field">
       <label data-i18n="lbl_hours">Horas</label>
       <input type="number" id="sessionHours" value="1" min="0.5" max="4" step="0.5">
     </div>
@@ -663,6 +675,52 @@ body.is-admin span.admin-only { display: inline; }
     <div class="field">
       <label data-i18n="lbl_notes">Notas (opcional)</label>
       <input type="text" id="sessionNotes" data-i18n-placeholder="ph_notes">
+    </div>
+    <!-- Recurrence -->
+    <div class="field" style="display:flex;align-items:center;gap:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="checkbox" id="sessionRepeat" onchange="document.getElementById('recurrenceOptions').style.display=this.checked?'block':'none'">
+        <span data-i18n="lbl_repeat">Repetir</span>
+      </label>
+    </div>
+    <div id="recurrenceOptions" style="display:none;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:-8px">
+      <div class="field" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span data-i18n="lbl_repeat_every" style="font-size:13px">Repetir cada</span>
+        <input type="number" id="recRepeatN" value="1" min="1" max="52" style="width:60px">
+        <select id="recRepeatUnit" style="width:auto" onchange="document.getElementById('recDayPickerField').style.display=this.value==='weeks'?'block':'none'">
+          <option value="weeks" data-i18n="lbl_weeks">semanas</option>
+          <option value="days" data-i18n="lbl_days">días</option>
+        </select>
+      </div>
+      <div class="field" id="recDayPickerField">
+        <label data-i18n="lbl_repeat_on" style="font-size:13px;margin-bottom:6px">Se repite en</label>
+        <div style="display:flex;gap:4px" id="recDayPicker">
+          <button type="button" class="day-btn" data-day="1" onclick="toggleRecDay(this)">L</button>
+          <button type="button" class="day-btn" data-day="2" onclick="toggleRecDay(this)">M</button>
+          <button type="button" class="day-btn" data-day="3" onclick="toggleRecDay(this)">X</button>
+          <button type="button" class="day-btn" data-day="4" onclick="toggleRecDay(this)">J</button>
+          <button type="button" class="day-btn" data-day="5" onclick="toggleRecDay(this)">V</button>
+          <button type="button" class="day-btn" data-day="6" onclick="toggleRecDay(this)">S</button>
+          <button type="button" class="day-btn" data-day="0" onclick="toggleRecDay(this)">D</button>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="lbl_ends" style="font-size:13px;margin-bottom:6px">Termina</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="recEnd" value="never" checked> <span data-i18n="lbl_never">Nunca</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="recEnd" value="on_date"> <span data-i18n="lbl_on_date">El día</span>
+            <input type="date" id="recEndDate" style="flex:1">
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="radio" name="recEnd" value="after_n"> <span data-i18n="lbl_after_n">Después de</span>
+            <input type="number" id="recEndAfter" value="10" min="2" max="200" style="width:60px">
+            <span data-i18n="lbl_occurrences">ocurrencias</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('sessionModal')" data-i18n="btn_cancel">Cancelar</button>
@@ -683,20 +741,26 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="pkgPrice" placeholder="Ej: 3000">
     </div>
+    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="checkbox" id="pkgPriceVisible" checked>
+        <span data-i18n="lbl_price_visible">Precio visible para viewer</span>
+      </label>
+    </div>
     <div class="field">
       <label data-i18n="lbl_start_date">Fecha inicio</label>
       <input type="date" id="pkgStart">
     </div>
     <div class="field">
-      <label data-i18n="lbl_end_date">Fecha fin</label>
+      <label data-i18n="lbl_end_date_opt">Fecha fin (opcional)</label>
       <input type="date" id="pkgEnd">
     </div>
     <div class="field">
       <label data-i18n="lbl_notes">Notas (opcional)</label>
       <input type="text" id="pkgNotes" data-i18n-placeholder="ph_pkg_notes">
     </div>
-    <div class="field">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
         <input type="checkbox" id="pkgPaid" onchange="document.getElementById('pkgPaidDateField').style.display=this.checked?'block':'none'">
         <span data-i18n="lbl_paid">Pagado</span>
       </label>
@@ -720,6 +784,10 @@ body.is-admin span.admin-only { display: inline; }
     <div class="field">
       <label data-i18n="lbl_date">Fecha</label>
       <input type="date" id="editSessionDate">
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_time">Hora</label>
+      <input type="time" id="editSessionTime">
     </div>
     <div class="field">
       <label data-i18n="lbl_hours">Horas</label>
@@ -754,20 +822,26 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="editPkgPrice">
     </div>
+    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="checkbox" id="editPkgPriceVisible">
+        <span data-i18n="lbl_price_visible">Precio visible para viewer</span>
+      </label>
+    </div>
     <div class="field">
       <label data-i18n="lbl_start_date">Fecha inicio</label>
       <input type="date" id="editPkgStart">
     </div>
     <div class="field">
-      <label data-i18n="lbl_end_date">Fecha fin</label>
+      <label data-i18n="lbl_end_date_opt">Fecha fin (opcional)</label>
       <input type="date" id="editPkgEnd">
     </div>
     <div class="field">
       <label data-i18n="lbl_notes">Notas (opcional)</label>
       <input type="text" id="editPkgNotes">
     </div>
-    <div class="field">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
         <input type="checkbox" id="editPkgPaid" onchange="document.getElementById('editPkgPaidDateField').style.display=this.checked?'block':'none'">
         <span data-i18n="lbl_paid">Pagado</span>
       </label>
@@ -780,6 +854,20 @@ body.is-admin span.admin-only { display: inline; }
       <button class="btn btn-danger btn-sm" onclick="deletePackage()" style="flex:0">🗑</button>
       <button class="btn btn-secondary" onclick="closeModal('editPackageModal')" data-i18n="btn_cancel">Cancelar</button>
       <button class="btn" onclick="updatePackage()" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PAST CLASS CONFIRMATION MODAL ══════ -->
+<div class="modal-overlay" id="pastClassModal">
+  <div class="modal">
+    <h2 data-i18n="modal_past_class">Clase pasada</h2>
+    <p id="pastClassInfo" style="color:var(--text2);margin-bottom:16px"></p>
+    <input type="hidden" id="pastClassId">
+    <div class="modal-actions" style="gap:8px">
+      <button class="btn btn-secondary" onclick="resolvePastClass('skip')" data-i18n="btn_skip">Omitir</button>
+      <button class="btn btn-danger" onclick="resolvePastClass('cancelled')" data-i18n="btn_cancelled">Cancelada</button>
+      <button class="btn" onclick="resolvePastClass('completed')" data-i18n="btn_completed">Completada</button>
     </div>
   </div>
 </div>
@@ -844,11 +932,23 @@ const T = {
     lbl_hours_included: 'Horas incluidas', lbl_total_price: 'Precio total (MXN)',
     lbl_start_date: 'Fecha inicio', lbl_end_date: 'Fecha fin',
     lbl_paid: 'Pagado', lbl_paid_date: 'Fecha de pago',
+    lbl_price_visible: 'Precio visible para viewer',
+    lbl_end_date_opt: 'Fecha fin (opcional)',
     ph_pkg_notes: 'Ej: Pago adelantado 6 meses',
     btn_cancel: 'Cancelar', btn_save: 'Guardar',
     // Status options
     status_scheduled: '📅 Programada', status_completed: '✅ Completada', status_cancelled: '❌ Cancelada',
     status_label_scheduled: 'Programada', status_label_completed: 'Completada', status_label_cancelled: 'Cancelada',
+    // Past class prompt
+    modal_past_class: 'Clase pasada',
+    past_class_question: '¿Tomaste esta clase?',
+    btn_completed: '✅ Completada', btn_cancelled: '❌ Cancelada', btn_skip: 'Omitir',
+    // Recurrence
+    lbl_time: 'Hora', lbl_repeat: 'Repetir',
+    lbl_repeat_every: 'Repetir cada', lbl_weeks: 'semanas', lbl_days: 'días',
+    lbl_repeat_on: 'Se repite en', lbl_ends: 'Termina',
+    lbl_never: 'Nunca', lbl_on_date: 'El día', lbl_after_n: 'Después de', lbl_occurrences: 'ocurrencias',
+    day_L: 'L', day_M: 'M', day_X: 'X', day_J: 'J', day_V: 'V', day_S: 'S', day_D: 'D',
     // Misc
     empty_no_classes: 'No hay clases este día',
     empty_no_packages: 'No hay paquetes.<br>Agrega uno para comenzar.',
@@ -861,6 +961,7 @@ const T = {
     toast_repo_format: 'El repo debe ser: usuario/nombre-repo',
     toast_date_hours_required: 'Fecha y horas son requeridos',
     toast_pkg_required: 'Horas, inicio y fin son requeridos',
+    toast_pkg_required_v2: 'Horas y fecha inicio son requeridos',
     connecting: 'Conectando…',
     error_prefix: 'Error: ',
     sync_error: 'Error al sincronizar: ',
@@ -910,10 +1011,20 @@ const T = {
     lbl_hours_included: 'Hours included', lbl_total_price: 'Total price (MXN)',
     lbl_start_date: 'Start date', lbl_end_date: 'End date',
     lbl_paid: 'Paid', lbl_paid_date: 'Payment date',
+    lbl_price_visible: 'Price visible to viewer',
+    lbl_end_date_opt: 'End date (optional)',
     ph_pkg_notes: 'e.g. 6 months advance payment',
     btn_cancel: 'Cancel', btn_save: 'Save',
     status_scheduled: '📅 Scheduled', status_completed: '✅ Completed', status_cancelled: '❌ Cancelled',
     status_label_scheduled: 'Scheduled', status_label_completed: 'Completed', status_label_cancelled: 'Cancelled',
+    modal_past_class: 'Past class',
+    past_class_question: 'Did you take this class?',
+    btn_completed: '✅ Completed', btn_cancelled: '❌ Cancelled', btn_skip: 'Skip',
+    lbl_time: 'Time', lbl_repeat: 'Repeat',
+    lbl_repeat_every: 'Repeat every', lbl_weeks: 'weeks', lbl_days: 'days',
+    lbl_repeat_on: 'Repeats on', lbl_ends: 'Ends',
+    lbl_never: 'Never', lbl_on_date: 'On date', lbl_after_n: 'After', lbl_occurrences: 'occurrences',
+    day_L: 'M', day_M: 'T', day_X: 'W', day_J: 'T', day_V: 'F', day_S: 'S', day_D: 'S',
     empty_no_classes: 'No classes this day',
     empty_no_packages: 'No packages yet.<br>Add one to get started.',
     confirm_delete_class: 'Delete this class?',
@@ -925,6 +1036,7 @@ const T = {
     toast_repo_format: 'Repo must be: user/repo-name',
     toast_date_hours_required: 'Date and hours are required',
     toast_pkg_required: 'Hours, start and end dates are required',
+    toast_pkg_required_v2: 'Hours and start date are required',
     connecting: 'Connecting…',
     error_prefix: 'Error: ',
     sync_error: 'Sync error: ',
@@ -1013,8 +1125,19 @@ async function sha256(text) {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function getAdminHash() { return localStorage.getItem('classTracker_adminHash'); }
-function setAdminHash(hash) { localStorage.setItem('classTracker_adminHash', hash); }
+function getAdminHash() {
+  // Prefer hash from synced data, fallback to localStorage
+  if (appData && appData.adminHash) return appData.adminHash;
+  return localStorage.getItem('classTracker_adminHash');
+}
+async function setAdminHash(hash) {
+  localStorage.setItem('classTracker_adminHash', hash);
+  // Also save to data.json so it works across devices
+  if (appData) {
+    appData.adminHash = hash;
+    await saveData();
+  }
+}
 
 function setAdminMode(on) {
   isAdmin = on;
@@ -1061,7 +1184,7 @@ async function setupAdminPassword() {
   if (pw.length < 4) { showToast(t('toast_password_short')); return; }
   if (pw !== confirm) { showToast(t('toast_password_mismatch')); return; }
   const hash = await sha256(pw);
-  setAdminHash(hash);
+  await setAdminHash(hash);
   closeModal('adminSetupModal');
   setAdminMode(true);
   showToast(t('toast_password_set'));
@@ -1203,6 +1326,8 @@ async function showApp() {
   });
 
   await syncData();
+  // After syncing, check for past scheduled classes (admin only)
+  if (!viewerMode) checkPastScheduledClasses();
 }
 
 // ═══════════════════════════════════
@@ -1270,6 +1395,10 @@ async function syncData() {
       appData = data;
       if (!appData.sessions) appData.sessions = [];
       if (!appData.packages) appData.packages = [];
+      // Sync admin hash from GitHub to localStorage
+      if (appData.adminHash) {
+        localStorage.setItem('classTracker_adminHash', appData.adminHash);
+      }
     }
     const locale = lang === 'es' ? 'es-MX' : 'en-US';
     document.getElementById('settingsSync').textContent = new Date().toLocaleTimeString(locale);
@@ -1423,7 +1552,7 @@ function renderDayPanel(dateStr) {
     <div class="session-item">
       <div class="status-dot" style="background:${statusColors[s.status]}"></div>
       <div class="session-info">
-        <div class="time">${s.hours}h — ${t('status_label_' + s.status)}</div>
+        <div class="time">${s.time ? s.time + ' · ' : ''}${s.hours}h — ${t('status_label_' + s.status)}</div>
         ${s.notes ? `<div class="notes">${esc(s.notes)}</div>` : ''}
         <div class="meta">${t('pkg_by')} ${esc(s.addedBy)} · ${new Date(s.createdAt).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US')}</div>
       </div>
@@ -1468,27 +1597,29 @@ function renderPackages() {
 
   list.innerHTML = appData.packages.map(p => {
     const used = appData.sessions
-      .filter(s => s.status === 'completed' && s.date >= p.startDate && s.date <= p.endDate)
+      .filter(s => s.status === 'completed' && s.date >= p.startDate && (!p.endDate || s.date <= p.endDate))
       .reduce((sum, s) => sum + s.hours, 0);
     const pct = Math.min(100, (used / p.hours) * 100);
-    const pph = p.price ? `$${Math.round(p.price / p.hours)}/hr` : '';
+    const showPrice = isAdmin || p.priceVisible !== false;
+    const pph = (showPrice && p.price) ? `$${Math.round(p.price / p.hours)}/hr` : '';
     const isPaid = p.paid === true;
     const paidLabel = isPaid ? t('pkg_paid') : t('pkg_pending');
     const paidClass = isPaid ? 'paid' : 'pending';
     const paidDateStr = isPaid && p.paidDate ? ` · ${fmtDate(p.paidDate)}` : '';
+    const endDateStr = p.endDate ? fmtDate(p.endDate) : '∞';
 
     return `
       <div class="package-card">
         <div class="pkg-header">
           <h3>${p.hours} ${t('pkg_hours')}</h3>
           <div style="text-align:right">
-            <span class="pkg-price">${p.price ? '$' + p.price.toLocaleString() + ' MXN' : ''} ${pph ? `(${pph})` : ''}</span>
+            ${showPrice ? `<span class="pkg-price">${p.price ? '$' + p.price.toLocaleString() + ' MXN' : ''} ${pph ? `(${pph})` : ''}</span>` : ''}
             <div style="margin-top:4px">
               <span class="payment-badge ${paidClass}" ${isAdmin ? `onclick="togglePayment('${p.id}')" title="Click to toggle"` : ''}>${paidLabel}${paidDateStr}</span>
             </div>
           </div>
         </div>
-        <div class="pkg-dates">${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}</div>
+        <div class="pkg-dates">${fmtDate(p.startDate)} → ${endDateStr}</div>
         <div class="pkg-progress"><div class="pkg-bar" style="width:${pct}%"></div></div>
         <div class="pkg-info">
           <span>${used} ${t('pkg_used_of')} ${p.hours} ${t('pkg_used')}</span>
@@ -1562,10 +1693,29 @@ function renderChart() {
 function openAddSession() {
   if (!isAdmin) return;
   document.getElementById('sessionDate').value = selectedDate || new Date().toISOString().split('T')[0];
+  document.getElementById('sessionTime').value = '';
   document.getElementById('sessionHours').value = '1';
   document.getElementById('sessionStatus').value = 'scheduled';
   document.getElementById('sessionNotes').value = '';
+  // Reset recurrence
+  document.getElementById('sessionRepeat').checked = false;
+  document.getElementById('recurrenceOptions').style.display = 'none';
+  document.getElementById('recRepeatN').value = '1';
+  document.getElementById('recRepeatUnit').value = 'weeks';
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('input[name="recEnd"][value="never"]').checked = true;
+  document.getElementById('recEndDate').value = '';
+  document.getElementById('recEndAfter').value = '10';
+  // Pre-select the day of the chosen date
+  const selDate = new Date((selectedDate || new Date().toISOString().split('T')[0]) + 'T12:00:00');
+  const dayNum = selDate.getDay();
+  const dayBtn = document.querySelector(`.day-btn[data-day="${dayNum}"]`);
+  if (dayBtn) dayBtn.classList.add('active');
   openModal('sessionModal');
+}
+
+function toggleRecDay(btn) {
+  btn.classList.toggle('active');
 }
 
 function openAddPackage() {
@@ -1573,9 +1723,9 @@ function openAddPackage() {
   const now = new Date();
   document.getElementById('pkgHours').value = '20';
   document.getElementById('pkgPrice').value = '';
+  document.getElementById('pkgPriceVisible').checked = true;
   document.getElementById('pkgStart').value = now.toISOString().split('T')[0];
-  const end = new Date(now); end.setMonth(end.getMonth() + 6);
-  document.getElementById('pkgEnd').value = end.toISOString().split('T')[0];
+  document.getElementById('pkgEnd').value = '';
   document.getElementById('pkgNotes').value = '';
   document.getElementById('pkgPaid').checked = false;
   document.getElementById('pkgPaidDateField').style.display = 'none';
@@ -1589,6 +1739,7 @@ function openEditSession(id) {
   if (!s) return;
   document.getElementById('editSessionId').value = id;
   document.getElementById('editSessionDate').value = s.date;
+  document.getElementById('editSessionTime').value = s.time || '';
   document.getElementById('editSessionHours').value = s.hours;
   document.getElementById('editSessionStatus').value = s.status;
   document.getElementById('editSessionNotes').value = s.notes || '';
@@ -1602,8 +1753,9 @@ function openEditPackage(id) {
   document.getElementById('editPkgId').value = id;
   document.getElementById('editPkgHours').value = p.hours;
   document.getElementById('editPkgPrice').value = p.price || '';
+  document.getElementById('editPkgPriceVisible').checked = p.priceVisible !== false;
   document.getElementById('editPkgStart').value = p.startDate;
-  document.getElementById('editPkgEnd').value = p.endDate;
+  document.getElementById('editPkgEnd').value = p.endDate || '';
   document.getElementById('editPkgNotes').value = p.notes || '';
   document.getElementById('editPkgPaid').checked = p.paid === true;
   document.getElementById('editPkgPaidDateField').style.display = p.paid ? 'block' : 'none';
@@ -1623,21 +1775,100 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 // ═══════════════════════════════════
 async function saveSession() {
   const date = document.getElementById('sessionDate').value;
+  const time = document.getElementById('sessionTime').value || '';
   const hours = parseFloat(document.getElementById('sessionHours').value);
   const status = document.getElementById('sessionStatus').value;
   const notes = document.getElementById('sessionNotes').value.trim();
   if (!date || !hours) { showToast(t('toast_date_hours_required')); return; }
 
-  appData.sessions.push({
-    id: uid(), date, hours, status, notes,
-    addedBy: config.name,
-    createdAt: new Date().toISOString()
-  });
+  const isRepeat = document.getElementById('sessionRepeat').checked;
+
+  if (isRepeat) {
+    // Generate recurring sessions
+    const repeatN = parseInt(document.getElementById('recRepeatN').value) || 1;
+    const repeatUnit = document.getElementById('recRepeatUnit').value;
+    const selectedDays = [...document.querySelectorAll('.day-btn.active')].map(b => parseInt(b.dataset.day));
+    const endType = document.querySelector('input[name="recEnd"]:checked').value;
+    const endDate = document.getElementById('recEndDate').value;
+    const endAfter = parseInt(document.getElementById('recEndAfter').value) || 10;
+
+    if (selectedDays.length === 0 && repeatUnit === 'weeks') {
+      // Default to the start date's day
+      selectedDays.push(new Date(date + 'T12:00:00').getDay());
+    }
+
+    const sessions = generateRecurringSessions({
+      startDate: date, time, hours, status, notes,
+      repeatN, repeatUnit, selectedDays, endType, endDate, endAfter
+    });
+
+    sessions.forEach(s => appData.sessions.push(s));
+  } else {
+    appData.sessions.push({
+      id: uid(), date, time, hours, status, notes,
+      addedBy: config.name,
+      createdAt: new Date().toISOString()
+    });
+  }
 
   closeModal('sessionModal');
   updateStats(); renderCalendar(); renderChart();
   if (selectedDate) renderDayPanel(selectedDate);
   await saveData();
+}
+
+function generateRecurringSessions({ startDate, time, hours, status, notes, repeatN, repeatUnit, selectedDays, endType, endDate, endAfter }) {
+  const sessions = [];
+  const start = new Date(startDate + 'T12:00:00');
+  const maxDate = endType === 'on_date' && endDate ? new Date(endDate + 'T12:00:00') : null;
+  const maxCount = endType === 'after_n' ? endAfter : 200; // safety cap
+  let count = 0;
+
+  if (repeatUnit === 'days') {
+    // Every N days
+    let current = new Date(start);
+    while (count < maxCount) {
+      if (maxDate && current > maxDate) break;
+      sessions.push({
+        id: uid(), date: fmtDateISO(current), time, hours, status, notes,
+        addedBy: config.name, createdAt: new Date().toISOString()
+      });
+      count++;
+      current.setDate(current.getDate() + repeatN);
+    }
+  } else {
+    // Every N weeks on selected days
+    let weekStart = new Date(start);
+    // Move to the Monday of the start week
+    const dayOfWeek = weekStart.getDay();
+    const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    weekStart.setDate(weekStart.getDate() + diffToMon);
+
+    while (count < maxCount) {
+      for (const day of selectedDays.sort((a, b) => {
+        // Sort: Mon=1, Tue=2, ..., Sat=6, Sun=0 → 1,2,3,4,5,6,0
+        const aa = a === 0 ? 7 : a;
+        const bb = b === 0 ? 7 : b;
+        return aa - bb;
+      })) {
+        const offset = day === 0 ? 6 : day - 1; // Mon=0, Sun=6
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + offset);
+        if (d < start) continue;
+        if (maxDate && d > maxDate) break;
+        if (count >= maxCount) break;
+        sessions.push({
+          id: uid(), date: fmtDateISO(d), time, hours, status, notes,
+          addedBy: config.name, createdAt: new Date().toISOString()
+        });
+        count++;
+      }
+      if (maxDate && weekStart > maxDate) break;
+      weekStart.setDate(weekStart.getDate() + 7 * repeatN);
+    }
+  }
+
+  return sessions;
 }
 
 async function updateSession() {
@@ -1646,6 +1877,7 @@ async function updateSession() {
   if (idx === -1) return;
 
   appData.sessions[idx].date = document.getElementById('editSessionDate').value;
+  appData.sessions[idx].time = document.getElementById('editSessionTime').value || '';
   appData.sessions[idx].hours = parseFloat(document.getElementById('editSessionHours').value);
   appData.sessions[idx].status = document.getElementById('editSessionStatus').value;
   appData.sessions[idx].notes = document.getElementById('editSessionNotes').value.trim();
@@ -1669,15 +1901,16 @@ async function deleteSession() {
 async function savePackage() {
   const hours = parseInt(document.getElementById('pkgHours').value);
   const price = parseInt(document.getElementById('pkgPrice').value) || 0;
+  const priceVisible = document.getElementById('pkgPriceVisible').checked;
   const startDate = document.getElementById('pkgStart').value;
   const endDate = document.getElementById('pkgEnd').value;
   const notes = document.getElementById('pkgNotes').value.trim();
   const paid = document.getElementById('pkgPaid').checked;
   const paidDate = paid ? (document.getElementById('pkgPaidDate').value || todayStr()) : null;
-  if (!hours || !startDate || !endDate) { showToast(t('toast_pkg_required')); return; }
+  if (!hours || !startDate) { showToast(t('toast_pkg_required_v2')); return; }
 
   appData.packages.push({
-    id: uid(), hours, price, startDate, endDate, notes,
+    id: uid(), hours, price, priceVisible, startDate, endDate: endDate || null, notes,
     paid, paidDate,
     addedBy: config.name,
     createdAt: new Date().toISOString()
@@ -1695,8 +1928,9 @@ async function updatePackage() {
 
   appData.packages[idx].hours = parseInt(document.getElementById('editPkgHours').value);
   appData.packages[idx].price = parseInt(document.getElementById('editPkgPrice').value) || 0;
+  appData.packages[idx].priceVisible = document.getElementById('editPkgPriceVisible').checked;
   appData.packages[idx].startDate = document.getElementById('editPkgStart').value;
-  appData.packages[idx].endDate = document.getElementById('editPkgEnd').value;
+  appData.packages[idx].endDate = document.getElementById('editPkgEnd').value || null;
   appData.packages[idx].notes = document.getElementById('editPkgNotes').value.trim();
   appData.packages[idx].paid = document.getElementById('editPkgPaid').checked;
   appData.packages[idx].paidDate = appData.packages[idx].paid ? (document.getElementById('editPkgPaidDate').value || todayStr()) : null;
@@ -1757,6 +1991,55 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════
+//  PAST CLASS CONFIRMATION
+// ═══════════════════════════════════
+let pastClassQueue = [];
+
+function checkPastScheduledClasses() {
+  if (!isAdmin && !getAdminHash()) return; // Only prompt admin
+  const today = todayStr();
+  pastClassQueue = appData.sessions.filter(s => s.status === 'scheduled' && s.date <= today);
+  showNextPastClass();
+}
+
+function showNextPastClass() {
+  if (pastClassQueue.length === 0) return;
+  const s = pastClassQueue[0];
+  const locale = lang === 'es' ? 'es-MX' : 'en-US';
+  const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+  const timeStr = s.time ? ` — ${s.time}` : '';
+  document.getElementById('pastClassId').value = s.id;
+  document.getElementById('pastClassInfo').innerHTML =
+    `📅 <strong>${dateStr}${timeStr}</strong> — ${s.hours}h` +
+    (s.notes ? `<br><span style="font-size:13px">${esc(s.notes)}</span>` : '') +
+    `<br><br>${t('past_class_question')}`;
+  openModal('pastClassModal');
+}
+
+let pastClassChanged = false;
+
+async function resolvePastClass(action) {
+  const id = document.getElementById('pastClassId').value;
+  if (action !== 'skip') {
+    const idx = appData.sessions.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      appData.sessions[idx].status = action;
+      pastClassChanged = true;
+    }
+  }
+  pastClassQueue.shift();
+  closeModal('pastClassModal');
+  if (pastClassQueue.length > 0) {
+    setTimeout(showNextPastClass, 300);
+  } else if (pastClassChanged) {
+    pastClassChanged = false;
+    updateStats(); renderCalendar(); renderChart();
+    if (selectedDate) renderDayPanel(selectedDate);
+    await saveData();
+  }
 }
 
 // ═══════════════════════════════════
