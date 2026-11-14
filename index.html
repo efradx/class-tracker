@@ -124,6 +124,7 @@ body {
 }
 
 .stat-card .number { font-size: 24px; font-weight: 800; }
+.stat-card .stat-hm { font-size: 11px; color: var(--text2); margin-top: 2px; font-weight: 500; }
 .stat-card .label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
 .stat-card.available .number { color: var(--green); }
 .stat-card.used .number { color: var(--accent); }
@@ -561,10 +562,12 @@ body.is-admin span.admin-only { display: inline; }
   <div class="stats">
     <div class="stat-card available">
       <div class="number" id="statAvailable">0</div>
+      <div class="stat-hm" id="statAvailableHM"></div>
       <div class="label" data-i18n="stat_available">Disponibles</div>
     </div>
     <div class="stat-card used">
       <div class="number" id="statUsed">0</div>
+      <div class="stat-hm" id="statUsedHM"></div>
       <div class="label" data-i18n="stat_used">Usadas</div>
     </div>
     <div class="stat-card purchased">
@@ -666,8 +669,8 @@ body.is-admin span.admin-only { display: inline; }
       <input type="time" id="sessionTime">
     </div>
     <div class="field">
-      <label data-i18n="lbl_hours">Horas</label>
-      <input type="number" id="sessionHours" value="1" min="0.5" max="4" step="0.5">
+      <label data-i18n="lbl_duration">Duración</label>
+      <select id="sessionHours"></select>
     </div>
     <div class="field">
       <label data-i18n="lbl_status">Estado</label>
@@ -795,8 +798,8 @@ body.is-admin span.admin-only { display: inline; }
       <input type="time" id="editSessionTime">
     </div>
     <div class="field">
-      <label data-i18n="lbl_hours">Horas</label>
-      <input type="number" id="editSessionHours" value="1" min="0.5" max="4" step="0.5">
+      <label data-i18n="lbl_duration">Duración</label>
+      <select id="editSessionHours"></select>
     </div>
     <div class="field">
       <label data-i18n="lbl_status">Estado</label>
@@ -936,7 +939,7 @@ const T = {
     // Modals
     modal_add_class: 'Agregar Clase', modal_edit_class: 'Editar Clase',
     modal_new_pkg: 'Nuevo Paquete', modal_edit_pkg: 'Editar Paquete',
-    lbl_date: 'Fecha', lbl_hours: 'Horas', lbl_status: 'Estado',
+    lbl_date: 'Fecha', lbl_hours: 'Horas', lbl_duration: 'Duración', lbl_status: 'Estado',
     lbl_notes: 'Notas (opcional)', ph_notes: 'Tema de la clase, etc.',
     lbl_hours_included: 'Horas incluidas', lbl_total_price: 'Precio total (MXN)',
     lbl_start_date: 'Fecha inicio', lbl_end_date: 'Fecha fin',
@@ -1016,7 +1019,7 @@ const T = {
     role_admin: 'ADMIN', role_viewer: 'VIEW ONLY',
     modal_add_class: 'Add Class', modal_edit_class: 'Edit Class',
     modal_new_pkg: 'New Package', modal_edit_pkg: 'Edit Package',
-    lbl_date: 'Date', lbl_hours: 'Hours', lbl_status: 'Status',
+    lbl_date: 'Date', lbl_hours: 'Hours', lbl_duration: 'Duration', lbl_status: 'Status',
     lbl_notes: 'Notes (optional)', ph_notes: 'Class topic, etc.',
     lbl_hours_included: 'Hours included', lbl_total_price: 'Total price (MXN)',
     lbl_start_date: 'Start date', lbl_end_date: 'End date',
@@ -1441,9 +1444,12 @@ async function saveData() {
 function updateStats() {
   const totalPurchased = appData.packages.reduce((s, p) => s + p.hours, 0);
   const totalUsed = appData.sessions.filter(s => s.status === 'completed').reduce((s, c) => s + c.hours, 0);
+  const totalAvailable = Math.max(0, totalPurchased - totalUsed);
   document.getElementById('statPurchased').textContent = totalPurchased;
   document.getElementById('statUsed').textContent = totalUsed;
-  document.getElementById('statAvailable').textContent = Math.max(0, totalPurchased - totalUsed);
+  document.getElementById('statAvailable').textContent = totalAvailable;
+  document.getElementById('statUsedHM').textContent = fmtHM(totalUsed);
+  document.getElementById('statAvailableHM').textContent = fmtHM(totalAvailable);
 
   // Debt calculation
   const debtHours = Math.max(0, totalUsed - totalPurchased);
@@ -1702,11 +1708,25 @@ function renderChart() {
 // ═══════════════════════════════════
 //  MODALS
 // ═══════════════════════════════════
+function populateDurationSelect(selectEl, selectedValue) {
+  selectEl.innerHTML = '';
+  for (let mins = 15; mins <= 240; mins += 15) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    const label = h > 0 ? `${h}h ${m > 0 ? m + 'min' : ''}`.trim() : `${m}min`;
+    const opt = document.createElement('option');
+    opt.value = (mins / 60).toString();
+    opt.textContent = label;
+    if (parseFloat(opt.value) === parseFloat(selectedValue)) opt.selected = true;
+    selectEl.appendChild(opt);
+  }
+}
+
 function openAddSession() {
   if (!isAdmin) return;
   document.getElementById('sessionDate').value = selectedDate || new Date().toISOString().split('T')[0];
   document.getElementById('sessionTime').value = '';
-  document.getElementById('sessionHours').value = '1';
+  populateDurationSelect(document.getElementById('sessionHours'), 1);
   document.getElementById('sessionStatus').value = 'scheduled';
   document.getElementById('sessionNotes').value = '';
   // Reset recurrence
@@ -1753,7 +1773,7 @@ function openEditSession(id) {
   document.getElementById('editSessionId').value = id;
   document.getElementById('editSessionDate').value = s.date;
   document.getElementById('editSessionTime').value = s.time || '';
-  document.getElementById('editSessionHours').value = s.hours;
+  populateDurationSelect(document.getElementById('editSessionHours'), s.hours);
   document.getElementById('editSessionStatus').value = s.status;
   document.getElementById('editSessionNotes').value = s.notes || '';
   openModal('editSessionModal');
@@ -1989,6 +2009,12 @@ function resetApp() {
 //  UTILS
 // ═══════════════════════════════════
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
+
+function fmtHM(hours) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} hrs`;
+}
 
 function esc(str) {
   const d = document.createElement('div');
