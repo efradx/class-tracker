@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Class Tracker — Control de Clases</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
 :root {
   --bg: #0f0f13;
@@ -580,7 +581,7 @@ body.is-admin span.admin-only { display: inline; }
     <button class="tab active" data-tab="calendar" data-i18n="tab_calendar">Calendario</button>
     <button class="tab" data-tab="packages" data-i18n="tab_packages">Paquetes</button>
     <button class="tab" data-tab="chart" data-i18n="tab_chart">Gráfica</button>
-    <button class="tab" data-tab="settings" data-i18n="tab_settings">Config</button>
+    <button class="tab admin-only" data-tab="settings" data-i18n="tab_settings">Config</button>
   </div>
 
   <!-- CALENDAR TAB -->
@@ -683,18 +684,18 @@ body.is-admin span.admin-only { display: inline; }
         <span data-i18n="lbl_repeat">Repetir</span>
       </label>
     </div>
-    <div id="recurrenceOptions" style="display:none;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:-8px">
-      <div class="field" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span data-i18n="lbl_repeat_every" style="font-size:13px">Repetir cada</span>
+    <div id="recurrenceOptions" style="display:none;border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:-4px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <span data-i18n="lbl_repeat_every" style="font-size:13px;color:var(--text2)">Repetir cada</span>
         <input type="number" id="recRepeatN" value="1" min="1" max="52" style="width:60px">
         <select id="recRepeatUnit" style="width:auto" onchange="document.getElementById('recDayPickerField').style.display=this.value==='weeks'?'block':'none'">
           <option value="weeks" data-i18n="lbl_weeks">semanas</option>
           <option value="days" data-i18n="lbl_days">días</option>
         </select>
       </div>
-      <div class="field" id="recDayPickerField">
-        <label data-i18n="lbl_repeat_on" style="font-size:13px;margin-bottom:6px">Se repite en</label>
-        <div style="display:flex;gap:4px" id="recDayPicker">
+      <div id="recDayPickerField" style="margin-bottom:14px">
+        <label data-i18n="lbl_repeat_on" style="font-size:13px;color:var(--text2);display:block;margin-bottom:8px">Se repite en</label>
+        <div style="display:flex;gap:6px" id="recDayPicker">
           <button type="button" class="day-btn" data-day="1" onclick="toggleRecDay(this)">L</button>
           <button type="button" class="day-btn" data-day="2" onclick="toggleRecDay(this)">M</button>
           <button type="button" class="day-btn" data-day="3" onclick="toggleRecDay(this)">X</button>
@@ -704,19 +705,19 @@ body.is-admin span.admin-only { display: inline; }
           <button type="button" class="day-btn" data-day="0" onclick="toggleRecDay(this)">D</button>
         </div>
       </div>
-      <div class="field">
-        <label data-i18n="lbl_ends" style="font-size:13px;margin-bottom:6px">Termina</label>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+      <div>
+        <label data-i18n="lbl_ends" style="font-size:13px;color:var(--text2);display:block;margin-bottom:10px">Termina</label>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
             <input type="radio" name="recEnd" value="never" checked> <span data-i18n="lbl_never">Nunca</span>
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
             <input type="radio" name="recEnd" value="on_date"> <span data-i18n="lbl_on_date">El día</span>
-            <input type="date" id="recEndDate" style="flex:1">
+            <input type="date" id="recEndDate" style="flex:1;margin-left:4px">
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
             <input type="radio" name="recEnd" value="after_n"> <span data-i18n="lbl_after_n">Después de</span>
-            <input type="number" id="recEndAfter" value="10" min="2" max="200" style="width:60px">
+            <input type="number" id="recEndAfter" value="10" min="2" max="200" style="width:60px;margin:0 4px">
             <span data-i18n="lbl_occurrences">ocurrencias</span>
           </label>
         </div>
@@ -741,10 +742,10 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="pkgPrice" placeholder="Ej: 3000">
     </div>
-    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+    <div class="field" style="padding:4px 0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
         <input type="checkbox" id="pkgPriceVisible" checked>
-        <span data-i18n="lbl_price_visible">Precio visible para viewer</span>
+        <span data-i18n="lbl_price_visible" style="color:var(--text2)">Precio visible para viewer</span>
       </label>
     </div>
     <div class="field">
@@ -822,10 +823,10 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="editPkgPrice">
     </div>
-    <div class="field" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+    <div class="field" style="padding:4px 0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
         <input type="checkbox" id="editPkgPriceVisible">
-        <span data-i18n="lbl_price_visible">Precio visible para viewer</span>
+        <span data-i18n="lbl_price_visible" style="color:var(--text2)">Precio visible para viewer</span>
       </label>
     </div>
     <div class="field">
