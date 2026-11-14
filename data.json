@@ -1,5 +1,16 @@
 {
-  "sessions": [],
+  "sessions": [
+    {
+      "id": "mwfufbq1t8qjez",
+      "date": "2026-11-13",
+      "time": "",
+      "hours": 1,
+      "status": "completed",
+      "notes": "",
+      "addedBy": "Efraim",
+      "createdAt": "2026-11-14T03:25:41.017Z"
+    }
+  ],
   "packages": [
     {
       "id": "mwfsfqqavey1cl",
