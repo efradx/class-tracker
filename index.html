@@ -999,6 +999,7 @@ let config = null;
 let appData = { sessions: [], packages: [] };
 let dataSha = null;
 let isAdmin = false;
+let viewerMode = false; // ?viewer URL param — skip setup, read-only, no token
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let selectedDate = null;
@@ -1105,6 +1106,19 @@ function init() {
   }
   applyLang();
 
+  // Check for ?viewer mode — teacher opens this link, no setup needed
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('viewer')) {
+    viewerMode = true;
+    // Detect repo from GitHub Pages URL: efradx.github.io/class-tracker → efradx/class-tracker
+    const hostParts = window.location.hostname.split('.');
+    const repoName = window.location.pathname.split('/').filter(Boolean)[0] || '';
+    const owner = hostParts[0] || '';
+    config = { name: 'Viewer', repo: `${owner}/${repoName}`, token: '' };
+    showApp();
+    return;
+  }
+
   const saved = localStorage.getItem('classTracker_config');
   if (saved) {
     config = JSON.parse(saved);
@@ -1169,6 +1183,18 @@ async function showApp() {
   document.getElementById('settingsRepo').textContent = config.repo;
   document.getElementById('settingsUser').textContent = config.name;
 
+  // Viewer mode: hide admin button, hide Config tab, auto-refresh
+  if (viewerMode) {
+    const adminBtn = document.getElementById('adminToggleBtn');
+    if (adminBtn) adminBtn.style.display = 'none';
+    // Hide Config tab
+    document.querySelectorAll('.tab').forEach(tab => {
+      if (tab.dataset.tab === 'settings') tab.style.display = 'none';
+    });
+    // Auto-refresh every 60s so teacher sees updates
+    setInterval(() => syncData(), 60000);
+  }
+
   // Start in viewer mode
   setAdminMode(false);
 
@@ -1186,9 +1212,9 @@ async function ghGet(repo, token) {
   const r = repo || config.repo;
   const tk = token || config.token;
   const url = `https://api.github.com/repos/${r}/contents/data.json`;
-  const res = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${tk}`, 'Accept': 'application/vnd.github+json' }
-  });
+  const headers = { 'Accept': 'application/vnd.github+json' };
+  if (tk) headers['Authorization'] = `Bearer ${tk}`;
+  const res = await fetch(url, { headers });
   if (res.status === 404) return null;
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -1256,6 +1282,7 @@ async function syncData() {
 }
 
 async function saveData() {
+  if (viewerMode) return; // read-only mode, never write
   try {
     await ghWrite(null, null, appData, dataSha);
     const locale = lang === 'es' ? 'es-MX' : 'en-US';
