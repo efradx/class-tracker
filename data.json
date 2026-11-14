@@ -23,21 +23,6 @@
   ],
   "packages": [
     {
-      "id": "mwfsfqqavey1cl",
-      "hours": 26,
-      "price": 150,
-      "startDate": "2026-11-13",
-      "endDate": "2027-01-21",
-      "notes": "",
-      "paid": false,
-      "paidDate": null,
-      "addedBy": "Efraim",
-      "createdAt": "2026-11-14T02:30:01.234Z",
-      "priceVisible": true,
-      "totalVisible": true,
-      "unitVisible": false
-    },
-    {
       "id": "mwfuf0lxienbuc",
       "hours": 20,
       "price": 150,
