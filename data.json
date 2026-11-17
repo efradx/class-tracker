@@ -59,6 +59,36 @@
       "notes": "",
       "addedBy": "Efraim",
       "createdAt": "2026-11-14T18:30:03.454Z"
+    },
+    {
+      "id": "mwk0j5hobbmdoi",
+      "date": "2026-11-24",
+      "time": "09:00",
+      "hours": 1,
+      "status": "scheduled",
+      "notes": "",
+      "addedBy": "Efraim",
+      "createdAt": "2026-11-17T01:27:41.964Z"
+    },
+    {
+      "id": "mwk0j5hozztljj",
+      "date": "2026-11-25",
+      "time": "09:00",
+      "hours": 1,
+      "status": "scheduled",
+      "notes": "",
+      "addedBy": "Efraim",
+      "createdAt": "2026-11-17T01:27:41.964Z"
+    },
+    {
+      "id": "mwk0j5hofve8d7",
+      "date": "2026-11-26",
+      "time": "09:00",
+      "hours": 1,
+      "status": "scheduled",
+      "notes": "",
+      "addedBy": "Efraim",
+      "createdAt": "2026-11-17T01:27:41.964Z"
     }
   ],
   "packages": [
