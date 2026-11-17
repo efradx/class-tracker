@@ -117,11 +117,7 @@ body {
   padding: 16px 20px;
 }
 
-.stat-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 10px;
-  text-align: center; transition: background 0.3s, border-color 0.3s;
-}
+/* stat-card base styles moved to glassmorphism section below */
 
 .stat-card .number { font-size: 24px; font-weight: 800; }
 .stat-card .stat-hm { font-size: 11px; color: var(--text2); margin-top: 2px; font-weight: 500; }
@@ -133,7 +129,6 @@ body {
 .stat-card.debt { border-color: var(--orange); }
 
 /* ─── TABS ─── */
-.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
 .tab {
   flex: 1; padding: 12px; text-align: center; font-size: 14px;
   font-weight: 600; color: var(--text2); background: none;
@@ -145,7 +140,7 @@ body {
 /* ─── CALENDAR ─── */
 .calendar-section { padding: 16px 20px; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.cal-header h2 { font-size: 16px; font-weight: 600; }
+/* cal-header h2 moved to larger month name section */
 .cal-nav { display: flex; gap: 4px; }
 .cal-nav button {
   width: 36px; height: 36px; border-radius: 8px;
@@ -177,7 +172,7 @@ body {
   min-height: 44px;
 }
 
-.cal-day:hover { border-color: var(--border); }
+/* cal-day hover moved to better calendar hover section */
 .cal-day.empty { background: transparent; cursor: default; }
 .cal-day.today { border-color: var(--accent); }
 
@@ -212,9 +207,7 @@ body {
   height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 4px;
 }
 
-.package-card .pkg-bar {
-  height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s;
-}
+/* pkg-bar styles moved to progress bar shimmer section */
 
 .package-card .pkg-info {
   font-size: 12px; color: var(--text2); display: flex; justify-content: space-between;
@@ -328,18 +321,7 @@ body {
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .modal-actions .btn { flex: 1; }
 
-/* ─── FAB ─── */
-.fab {
-  position: fixed; bottom: 24px; right: 24px;
-  width: 56px; height: 56px; border-radius: 16px;
-  background: var(--accent); color: #fff; border: none;
-  font-size: 28px; cursor: pointer;
-  box-shadow: 0 4px 20px rgba(108,99,255,0.4);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 40; transition: transform 0.2s;
-}
-
-.fab:hover { transform: scale(1.05); }
+/* fab styles moved to fab ripple section below */
 
 /* ─── SETTINGS ─── */
 .settings-section { padding: 16px 20px; display: none; }
@@ -375,16 +357,7 @@ body {
 }
 .admin-lock-btn:hover { border-color: var(--accent); color: var(--text); }
 
-/* ─── TOAST ─── */
-.toast {
-  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-  background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text); padding: 12px 24px; border-radius: 10px;
-  font-size: 14px; z-index: 200; opacity: 0;
-  transition: opacity 0.3s; pointer-events: none;
-}
-
-.toast.show { opacity: 1; }
+/* toast styles moved to smoother toast section below */
 
 /* ─── LOADING / EMPTY ─── */
 .loading {
@@ -403,6 +376,134 @@ body {
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 .empty-state p { font-size: 14px; line-height: 1.5; }
+
+/* ─── CUSTOM TIME PICKER ─── */
+.time-picker { display: flex; align-items: center; gap: 4px; }
+.time-picker select {
+  width: auto; padding: 10px 8px; text-align: center; font-size: 16px; font-weight: 600;
+  appearance: none; -webkit-appearance: none;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); cursor: pointer; transition: border-color 0.2s;
+}
+.time-picker select:focus { outline: none; border-color: var(--accent); }
+.time-picker .sep { font-size: 20px; font-weight: 700; color: var(--text2); padding: 0 2px; }
+
+/* ─── DURATION STEPPER ─── */
+.duration-stepper {
+  display: flex; align-items: center; gap: 0; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; background: var(--bg);
+}
+.duration-stepper button {
+  width: 44px; height: 44px; border: none; background: var(--bg2);
+  color: var(--accent); font-size: 20px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.duration-stepper button:hover { background: var(--bg3); }
+.duration-stepper button:active { background: var(--accent); color: #fff; }
+.duration-stepper .dur-display {
+  flex: 1; text-align: center; font-size: 15px; font-weight: 600;
+  color: var(--text); padding: 10px 12px; min-width: 80px;
+  user-select: none;
+}
+
+/* ─── VISIBILITY TOGGLES ─── */
+.vis-toggles { display: flex; gap: 16px; flex-wrap: wrap; padding: 4px 0; }
+.vis-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: 13px; color: var(--text2); margin: 0;
+}
+.vis-toggle input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
+}
+
+/* ─── STAT ICONS ─── */
+.stat-card .stat-icon { font-size: 18px; margin-bottom: 4px; opacity: 0.7; }
+
+/* ─── GLASSMORPHISM STAT CARDS ─── */
+.stat-card {
+  background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 10px;
+  text-align: center; transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.4;
+}
+.stat-card.available::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+.stat-card.used::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.stat-card.purchased::before { background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
+.stat-card.debt::before { background: linear-gradient(90deg, transparent, var(--orange), transparent); }
+
+/* ─── ANIMATED TAB INDICATOR ─── */
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; position: relative; }
+.tabs::after {
+  content: ''; position: absolute; bottom: 0; height: 2px;
+  background: var(--accent); border-radius: 2px;
+  left: var(--tab-left, 0); width: var(--tab-width, 0);
+  transition: left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ─── BETTER CALENDAR HOVER ─── */
+.cal-day { transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.cal-day:not(.empty):hover {
+  transform: scale(1.08); border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(108,99,255,0.15);
+}
+.cal-day.today { box-shadow: 0 0 0 2px rgba(108,99,255,0.3); }
+
+/* ─── PROGRESS BAR SHIMMER ─── */
+.package-card .pkg-bar {
+  height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 2s ease infinite;
+}
+@keyframes shimmer { 0%,100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+
+/* ─── SMOOTHER TOAST ─── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 24px; border-radius: 10px;
+  font-size: 14px; z-index: 200; opacity: 0;
+  transition: opacity 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none; backdrop-filter: blur(8px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── FAB RIPPLE ─── */
+.fab {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 28px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 40; transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden; position: fixed;
+}
+.fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(108,99,255,0.5); }
+.fab:active { transform: scale(0.95); }
+
+/* ─── LARGER MONTH NAME ─── */
+.cal-header h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+
+/* ─── PAID vs PENDING PACKAGE VISUAL ─── */
+.package-card.is-paid { border-left: 3px solid var(--green); }
+.package-card.is-pending { border-left: 3px solid var(--yellow); }
+
+/* ─── COUNT-UP ANIMATION ─── */
+@keyframes countFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.stat-card .number { animation: countFadeIn 0.4s ease-out; }
+
+/* ─── DARK MODE SHADOWS ─── */
+body:not(.light) .stat-card { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+body:not(.light) .package-card { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+body:not(.light) .session-item { box-shadow: 0 1px 6px rgba(0,0,0,0.15); }
 
 /* ─── ADMIN-ONLY ELEMENTS ─── */
 .admin-only { display: none; }
@@ -561,20 +662,24 @@ body.is-admin span.admin-only { display: inline; }
 
   <div class="stats">
     <div class="stat-card available">
+      <div class="stat-icon">✅</div>
       <div class="number" id="statAvailable">0</div>
       <div class="stat-hm" id="statAvailableHM"></div>
       <div class="label" data-i18n="stat_available">Disponibles</div>
     </div>
     <div class="stat-card used">
+      <div class="stat-icon">📖</div>
       <div class="number" id="statUsed">0</div>
       <div class="stat-hm" id="statUsedHM"></div>
       <div class="label" data-i18n="stat_used">Usadas</div>
     </div>
     <div class="stat-card purchased">
+      <div class="stat-icon">🎫</div>
       <div class="number" id="statPurchased">0</div>
       <div class="label" data-i18n="stat_purchased">Compradas</div>
     </div>
     <div class="stat-card debt" id="debtCard" style="display:none">
+      <div class="stat-icon">⚠️</div>
       <div class="number" id="statDebt">$0</div>
       <div class="label" data-i18n="stat_debt">Deuda</div>
     </div>
@@ -666,11 +771,20 @@ body.is-admin span.admin-only { display: inline; }
     </div>
     <div class="field">
       <label data-i18n="lbl_time">Hora</label>
-      <input type="time" id="sessionTime">
+      <div class="time-picker">
+        <select id="sessionTimeH"></select>
+        <span class="sep">:</span>
+        <select id="sessionTimeM"></select>
+      </div>
     </div>
     <div class="field">
       <label data-i18n="lbl_duration">Duración</label>
-      <select id="sessionHours"></select>
+      <div class="duration-stepper">
+        <button type="button" onclick="stepDuration('sessionDur',-1)">−</button>
+        <div class="dur-display" id="sessionDurLabel">1h</div>
+        <button type="button" onclick="stepDuration('sessionDur',1)">+</button>
+      </div>
+      <input type="hidden" id="sessionDur" value="1">
     </div>
     <div class="field">
       <label data-i18n="lbl_status">Estado</label>
@@ -745,15 +859,18 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="pkgPrice" placeholder="Ej: 3000">
     </div>
-    <div class="field" style="padding:4px 0;display:flex;flex-direction:column;gap:8px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="pkgTotalVisible" checked>
-        <span data-i18n="lbl_total_visible" style="color:var(--text2)">Precio total visible para viewer</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="pkgUnitVisible" checked>
-        <span data-i18n="lbl_unit_visible" style="color:var(--text2)">Precio por hora visible para viewer</span>
-      </label>
+    <div class="field">
+      <label style="font-size:12px;color:var(--text2);margin-bottom:6px;display:block" data-i18n="lbl_viewer_sees">Visible para viewer</label>
+      <div class="vis-toggles">
+        <label class="vis-toggle">
+          <input type="checkbox" id="pkgTotalVisible" checked>
+          <span data-i18n="lbl_total_short">Total</span>
+        </label>
+        <label class="vis-toggle">
+          <input type="checkbox" id="pkgUnitVisible" checked>
+          <span data-i18n="lbl_unit_short">$/hora</span>
+        </label>
+      </div>
     </div>
     <div class="field">
       <label data-i18n="lbl_start_date">Fecha inicio</label>
@@ -795,11 +912,20 @@ body.is-admin span.admin-only { display: inline; }
     </div>
     <div class="field">
       <label data-i18n="lbl_time">Hora</label>
-      <input type="time" id="editSessionTime">
+      <div class="time-picker">
+        <select id="editSessionTimeH"></select>
+        <span class="sep">:</span>
+        <select id="editSessionTimeM"></select>
+      </div>
     </div>
     <div class="field">
       <label data-i18n="lbl_duration">Duración</label>
-      <select id="editSessionHours"></select>
+      <div class="duration-stepper">
+        <button type="button" onclick="stepDuration('editSessionDur',-1)">−</button>
+        <div class="dur-display" id="editSessionDurLabel">1h</div>
+        <button type="button" onclick="stepDuration('editSessionDur',1)">+</button>
+      </div>
+      <input type="hidden" id="editSessionDur" value="1">
     </div>
     <div class="field">
       <label data-i18n="lbl_status">Estado</label>
@@ -830,15 +956,18 @@ body.is-admin span.admin-only { display: inline; }
       <label data-i18n="lbl_total_price">Precio total (MXN)</label>
       <input type="number" id="editPkgPrice">
     </div>
-    <div class="field" style="padding:4px 0;display:flex;flex-direction:column;gap:8px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="editPkgTotalVisible">
-        <span data-i18n="lbl_total_visible" style="color:var(--text2)">Precio total visible para viewer</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-size:14px">
-        <input type="checkbox" id="editPkgUnitVisible">
-        <span data-i18n="lbl_unit_visible" style="color:var(--text2)">Precio por hora visible para viewer</span>
-      </label>
+    <div class="field">
+      <label style="font-size:12px;color:var(--text2);margin-bottom:6px;display:block" data-i18n="lbl_viewer_sees">Visible para viewer</label>
+      <div class="vis-toggles">
+        <label class="vis-toggle">
+          <input type="checkbox" id="editPkgTotalVisible">
+          <span data-i18n="lbl_total_short">Total</span>
+        </label>
+        <label class="vis-toggle">
+          <input type="checkbox" id="editPkgUnitVisible">
+          <span data-i18n="lbl_unit_short">$/hora</span>
+        </label>
+      </div>
     </div>
     <div class="field">
       <label data-i18n="lbl_start_date">Fecha inicio</label>
@@ -946,6 +1075,9 @@ const T = {
     lbl_paid: 'Pagado', lbl_paid_date: 'Fecha de pago',
     lbl_total_visible: 'Precio total visible para viewer',
     lbl_unit_visible: 'Precio por hora visible para viewer',
+    lbl_viewer_sees: 'Visible para viewer',
+    lbl_total_short: 'Total',
+    lbl_unit_short: '$/hora',
     lbl_end_date_opt: 'Fecha fin (opcional)',
     ph_pkg_notes: 'Ej: Pago adelantado 6 meses',
     btn_cancel: 'Cancelar', btn_save: 'Guardar',
@@ -1026,6 +1158,9 @@ const T = {
     lbl_paid: 'Paid', lbl_paid_date: 'Payment date',
     lbl_total_visible: 'Total price visible to viewer',
     lbl_unit_visible: 'Price per hour visible to viewer',
+    lbl_viewer_sees: 'Visible to viewer',
+    lbl_total_short: 'Total',
+    lbl_unit_short: '$/hour',
     lbl_end_date_opt: 'End date (optional)',
     ph_pkg_notes: 'e.g. 6 months advance payment',
     btn_cancel: 'Cancel', btn_save: 'Save',
@@ -1342,6 +1477,8 @@ async function showApp() {
   await syncData();
   // After syncing, check for past scheduled classes (admin only)
   if (!viewerMode) checkPastScheduledClasses();
+  // Init tab indicator
+  switchTab('calendar');
 }
 
 // ═══════════════════════════════════
@@ -1600,6 +1737,17 @@ function switchTab(tab) {
     document.getElementById('calendarTab').querySelector('.cal-header').style.display = '';
   }
   if (tab === 'chart') renderChart();
+  // Animated tab indicator
+  requestAnimationFrame(() => {
+    const activeTab = document.querySelector(`.tab[data-tab="${tab}"]`);
+    const tabsBar = document.querySelector('.tabs');
+    if (activeTab && tabsBar) {
+      const tabRect = activeTab.getBoundingClientRect();
+      const barRect = tabsBar.getBoundingClientRect();
+      tabsBar.style.setProperty('--tab-left', (tabRect.left - barRect.left) + 'px');
+      tabsBar.style.setProperty('--tab-width', tabRect.width + 'px');
+    }
+  });
 }
 
 // ═══════════════════════════════════
@@ -1627,7 +1775,7 @@ function renderPackages() {
     const endDateStr = p.endDate ? fmtDate(p.endDate) : '∞';
 
     return `
-      <div class="package-card">
+      <div class="package-card ${isPaid ? 'is-paid' : 'is-pending'}">
         <div class="pkg-header">
           <h3>${p.hours} ${t('pkg_hours')}</h3>
           <div style="text-align:right">
@@ -1708,25 +1856,74 @@ function renderChart() {
 // ═══════════════════════════════════
 //  MODALS
 // ═══════════════════════════════════
-function populateDurationSelect(selectEl, selectedValue) {
-  selectEl.innerHTML = '';
-  for (let mins = 15; mins <= 240; mins += 15) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    const label = h > 0 ? `${h}h ${m > 0 ? m + 'min' : ''}`.trim() : `${m}min`;
+/* ── Time Picker Helpers ── */
+function populateTimeSelects(hId, mId, timeStr) {
+  const hSel = document.getElementById(hId);
+  const mSel = document.getElementById(mId);
+  hSel.innerHTML = '';
+  mSel.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
     const opt = document.createElement('option');
-    opt.value = (mins / 60).toString();
-    opt.textContent = label;
-    if (parseFloat(opt.value) === parseFloat(selectedValue)) opt.selected = true;
-    selectEl.appendChild(opt);
+    opt.value = String(i).padStart(2, '0');
+    opt.textContent = String(i).padStart(2, '0');
+    hSel.appendChild(opt);
   }
+  [0, 15, 30, 45].forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = String(m).padStart(2, '0');
+    opt.textContent = String(m).padStart(2, '0');
+    mSel.appendChild(opt);
+  });
+  if (timeStr && timeStr.includes(':')) {
+    const [h, m] = timeStr.split(':');
+    hSel.value = h.padStart(2, '0');
+    // snap minute to nearest quarter
+    const mn = parseInt(m) || 0;
+    const snapped = String(Math.round(mn / 15) * 15 % 60).padStart(2, '0');
+    mSel.value = snapped;
+  } else {
+    hSel.value = '09';
+    mSel.value = '00';
+  }
+}
+
+function getTimeValue(hId, mId) {
+  return document.getElementById(hId).value + ':' + document.getElementById(mId).value;
+}
+
+/* ── Duration Stepper Helpers ── */
+const durSteps = [];
+for (let m = 15; m <= 240; m += 15) durSteps.push(m / 60);
+
+function stepDuration(hiddenId, dir) {
+  const hidden = document.getElementById(hiddenId);
+  const cur = parseFloat(hidden.value) || 1;
+  let idx = durSteps.indexOf(cur);
+  if (idx === -1) idx = durSteps.findIndex(v => v >= cur) || 0;
+  idx = Math.max(0, Math.min(durSteps.length - 1, idx + dir));
+  hidden.value = durSteps[idx];
+  updateDurLabel(hiddenId);
+}
+
+function updateDurLabel(hiddenId) {
+  const val = parseFloat(document.getElementById(hiddenId).value) || 1;
+  const h = Math.floor(val);
+  const m = Math.round((val - h) * 60);
+  const label = h > 0 ? `${h}h${m > 0 ? ' ' + m + 'min' : ''}` : `${m}min`;
+  document.getElementById(hiddenId + 'Label').textContent = label;
+}
+
+function setDuration(hiddenId, value) {
+  const v = parseFloat(value) || 1;
+  document.getElementById(hiddenId).value = v;
+  updateDurLabel(hiddenId);
 }
 
 function openAddSession() {
   if (!isAdmin) return;
   document.getElementById('sessionDate').value = selectedDate || new Date().toISOString().split('T')[0];
-  document.getElementById('sessionTime').value = '';
-  populateDurationSelect(document.getElementById('sessionHours'), 1);
+  populateTimeSelects('sessionTimeH', 'sessionTimeM', '');
+  setDuration('sessionDur', 1);
   document.getElementById('sessionStatus').value = 'scheduled';
   document.getElementById('sessionNotes').value = '';
   // Reset recurrence
@@ -1772,8 +1969,8 @@ function openEditSession(id) {
   if (!s) return;
   document.getElementById('editSessionId').value = id;
   document.getElementById('editSessionDate').value = s.date;
-  document.getElementById('editSessionTime').value = s.time || '';
-  populateDurationSelect(document.getElementById('editSessionHours'), s.hours);
+  populateTimeSelects('editSessionTimeH', 'editSessionTimeM', s.time || '');
+  setDuration('editSessionDur', s.hours);
   document.getElementById('editSessionStatus').value = s.status;
   document.getElementById('editSessionNotes').value = s.notes || '';
   openModal('editSessionModal');
@@ -1809,8 +2006,8 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 // ═══════════════════════════════════
 async function saveSession() {
   const date = document.getElementById('sessionDate').value;
-  const time = document.getElementById('sessionTime').value || '';
-  const hours = parseFloat(document.getElementById('sessionHours').value);
+  const time = getTimeValue('sessionTimeH', 'sessionTimeM');
+  const hours = parseFloat(document.getElementById('sessionDur').value);
   const status = document.getElementById('sessionStatus').value;
   const notes = document.getElementById('sessionNotes').value.trim();
   if (!date || !hours) { showToast(t('toast_date_hours_required')); return; }
@@ -1911,8 +2108,8 @@ async function updateSession() {
   if (idx === -1) return;
 
   appData.sessions[idx].date = document.getElementById('editSessionDate').value;
-  appData.sessions[idx].time = document.getElementById('editSessionTime').value || '';
-  appData.sessions[idx].hours = parseFloat(document.getElementById('editSessionHours').value);
+  appData.sessions[idx].time = getTimeValue('editSessionTimeH', 'editSessionTimeM');
+  appData.sessions[idx].hours = parseFloat(document.getElementById('editSessionDur').value);
   appData.sessions[idx].status = document.getElementById('editSessionStatus').value;
   appData.sessions[idx].notes = document.getElementById('editSessionNotes').value.trim();
 
